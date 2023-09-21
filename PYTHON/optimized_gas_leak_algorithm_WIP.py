@@ -10,7 +10,7 @@ windspeed = np.array([3.1, 5.0, 1.9, 6.2, 4.7, 6.9, 2.4, 5.0])
 y = np.zeros(np.size(x_sample))
 z = np.zeros(np.size(y_sample))
 stability_class = np.array([4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
-x_sample, y_sample, y, z, windspeed, stability_class = data 
+x_sample, y_sample, y, z, windspeed, stability_class = data
 
 # Define the function for the Guassian plume model
 def func(data, x_leakage, y_leakage, z_leakage, emission_rate):
@@ -28,24 +28,21 @@ def func(data, x_leakage, y_leakage, z_leakage, emission_rate):
         list_c.append(stability_values[stability_class[i]][2])
         list_d.append(stability_values[stability_class[i]][3])
 
-    distance = np.sqrt((v - f)**2 + (w - g)**2)                                             # since our y value is always zero, we fill in the distance for x in the formula (read user manual to understand exactly why). this is the distance between the leakage and the datapoint
+    distance = np.sqrt((x_sample - x_leakage)**2 + (y_sample - y_leakage)**2)                                             # since our y value is always zero, we fill in the distance for x in the formula (read user manual to understand exactly why). this is the distance between the leakage and the datapoint
     theta = 0.017453293 * (list_c - list_d * np.log(distance/1000))                         # here you can see the calculation of: theta
     sigma_y = 465.11628 * (distance / 1000) * np.tan(theta)                                 # sigma_y
     sigma_z = list_a * (distance / 1000)**list_b                                            # sigma_Z
-    first_fracture = Q / (2 * np.pi * U * sigma_y * sigma_z)                                # the first fracture of the formula
+    first_fraction = Q / (2 * np.pi * U * sigma_y * sigma_z)                                # the first fracture of the formula
     exp_arg_z1 = -(z - h)**2 / (2 * sigma_z**2)                                             # the first exponential of the formula
     exp_arg_z2 = -(z + h)**2 / (2 * sigma_z**2)                                             # the second exponential of the formula
     exp_arg_y = -(y)**2 / (2 * sigma_y**2)                                                  # the last exponential of the formula
-    eq = first_fracture * (np.exp(exp_arg_z1) + np.exp(exp_arg_z2)) * np.exp(exp_arg_y)     # here the fracture and exponentials come together to create the entire equation
+    eq = first_fraction * (np.exp(exp_arg_z1) + np.exp(exp_arg_z2)) * np.exp(exp_arg_y)     # here the fracture and exponentials come together to create the entire equation
 
     return eq
 
 # data from robot
 # left side of the equation                                     here are the values for C that are retrieved from the robot
 C = np.array([1.2906*(10**-5), 1.7442*(10**-22), 3.9516*(10**-7), 2.9693*(10**-4), 2.5659*(10**-4), 5.3601*(10**-7), 7.7545*(10**-4), 3.1532*(10**-5)]) 
-
-# right side of the equation                                                These are all values that should be retrieved from the robot
-                                               # collection of all the data, so it can be used in the curvefit function
 
 # loop that uses ceveral initial guesses and picks the best one
 solution = [0,0,0,0]                                                        # an empty solution that will be replaced with new solutions by running the code
@@ -66,9 +63,7 @@ for i in range(21):                                                         # fo
                     solution = popt
 
 # show the best found values for f, g, h and Q
-print('f =',solution[0],',','g =',solution[1],',','h =',solution[2],',','Q =',solution[3])                          # this prints the output
-
-
+print('x_leakage =',solution[0],',','y_leakage=',solution[1],',','z_leakage =',solution[2],',','emmision_rate =',solution[3])
 
 
 # The code has ended here!
