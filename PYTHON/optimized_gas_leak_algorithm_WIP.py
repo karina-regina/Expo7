@@ -1,28 +1,32 @@
-# import libraries that are used further in the code (please do not touch these four lines)
 import numpy as np                              
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import sympy as sym
 
+#input from MatLab
+x_sample = np.array([-14.0, 10.0, 34.0, 88.0, 64.0, 46.0, 88.0, 54.4])   
+y_sample = np.array([5.0, 6.0, 22.0, 7.0, -38.0, 12.0, 10.0, 20.0])
+windspeed = np.array([3.1, 5.0, 1.9, 6.2, 4.7, 6.9, 2.4, 5.0])
+y = np.zeros(np.size(x_sample))
+z = np.zeros(np.size(y_sample))
+stability_class = np.array([4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
+x_sample, y_sample, y, z, windspeed, stability_class = data 
+
 # Define the function for the Guassian plume model
-def func(data, f, g, h, Q):                             # f is here the x coördinate of the leakage, g is the y coördinate of the leakage, h is the height of the leakage and Q is the mass emission rate in a certain point
-    v, w, y, z, U, stability = data                     # These are the data that are given by the robot
-    list_a = []                                         # v is here the x coördinate of the datapoint, w is the y coördinate of the data point
-    list_b = []                                         # y & z are the y and z as in the formula and are always 0 in our case
-    list_c = []                                         # U is the windspeed and stability is the pasquil stability category which is a value from 1-6, where 1 = A and 6 = F
-    list_d = []                                         # these four lists for a,b,c and d will create the values for these variables for a datapoint, when the stability category is given
-    for i in range(len(stability)):
-        stabilityvalues= {1 : (122.8,0.94470,24.1670,2.5334),
+def func(data, x_leakage, y_leakage, z_leakage, emission_rate):
+    list_a, list_b, list_c, list_d = ([] for i in range(4))
+    for i in range(len(stability_class)):
+        stability_values= {1 : (122.8,0.94470,24.1670,2.5334),
                   2: (90.673, 0.93198, 18.3330, 1.8096),
                   3: (61.141, 0.91465, 12.5, 1.0857),
                   4: (34.459, 0.86974, 8.3330, 0.72382),
                   5: (24.26, 0.83660, 6.25, 0.54287),
                   6: (15.209, 0.81558, 4.1667, 0.36191)
                  }
-        list_a.append(stabilityvalues[stability[i]][0])
-        list_b.append(stabilityvalues[stability[i]][1])                           # y & z are the y and z as in the formula and are always 0 in our case
-        list_c.append(stabilityvalues[stability[i]][2])                                         # U is the windspeed and stability is the pasquil stability category which is a value from 1-6, where 1 = A and 6 = F
-        list_d.append(stabilityvalues[stability[i]][3])
+        list_a.append(stability_values[stability_class[i]][0])
+        list_b.append(stability_values[stability_class[i]][1])
+        list_c.append(stability_values[stability_class[i]][2])
+        list_d.append(stability_values[stability_class[i]][3])
 
     distance = np.sqrt((v - f)**2 + (w - g)**2)                                             # since our y value is always zero, we fill in the distance for x in the formula (read user manual to understand exactly why). this is the distance between the leakage and the datapoint
     theta = 0.017453293 * (list_c - list_d * np.log(distance/1000))                         # here you can see the calculation of: theta
@@ -41,13 +45,7 @@ def func(data, f, g, h, Q):                             # f is here the x coörd
 C = np.array([1.2906*(10**-5), 1.7442*(10**-22), 3.9516*(10**-7), 2.9693*(10**-4), 2.5659*(10**-4), 5.3601*(10**-7), 7.7545*(10**-4), 3.1532*(10**-5)]) 
 
 # right side of the equation                                                These are all values that should be retrieved from the robot
-v = np.array([-14.0, 10.0, 34.0, 88.0, 64.0, 46.0, 88.0, 54.4])             # values for v (the x coördinate of the datapoint)   
-w = np.array([5.0, 6.0, 22.0, 7.0, -38.0, 12.0, 10.0, 20.0])                # values for w (the y coördinate of the datapoint)
-U = np.array([3.1, 5.0, 1.9, 6.2, 4.7, 6.9, 2.4, 5.0])                      # values for the U (the winspeed measured at the datapoint)
-y = np.zeros(np.size(v))                                                    # y is always 0 in our case
-z = np.zeros(np.size(v))                                                    # z is always 0 in our case
-stability = np.array([4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])              # stability per datapoint
-x = v, w, y, z, U, stability                                                # collection of all the data, so it can be used in the curvefit function
+                                               # collection of all the data, so it can be used in the curvefit function
 
 # loop that uses ceveral initial guesses and picks the best one
 solution = [0,0,0,0]                                                        # an empty solution that will be replaced with new solutions by running the code
