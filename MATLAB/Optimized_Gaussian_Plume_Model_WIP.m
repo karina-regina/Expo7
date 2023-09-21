@@ -7,14 +7,7 @@
 % Do not change these variables                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% SECTION 0: Definitions (don't modify this section)
 close all; clear; clc;
-
-
-% stability of the atmosphere
-stability_str={'Very unstable','Moderately unstable','Slightly unstable',...
-               'Neutral','Moderately stable','Very stable'};
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % SECTION 1: Configuration
@@ -30,10 +23,9 @@ z_min = 0;
 z_max = 30;
 
 step_y = 1;                                                                % step size of y (m)
+stability = 1; % set from 1-6                                              % stability parameter (1-6)
 
-stability = 4; % set from 1-6                                              % stability parameter (1-6)
-
-measured_x = 56;                                                           % x position of measurement (m)
+measured_x = 63;                                                           % x position of measurement (m)
 measured_y = 38;                                                           % y position of measurement (m)
 measured_z = 0;                                                            % z position of measurement (m)
 
@@ -43,8 +35,12 @@ H = 4;                                                                     % sta
 
 Q = 1;                                                                     % mass emitted per unit time (g/s)
 windspeed = 4.7;                                                           % wind speed (m/s)
-
+wind_direction=90;                                                         % wind_angle in degrees
 % +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+% stability of the atmosphere
+stability_str={'Very unstable','Moderately unstable','Slightly unstable',...
+               'Neutral','Moderately stable','Very stable'};
 
 dy= step_y;                                                                % resolution of the model in x direction
 dx=(x_max - x_min)/(y_max - y_min) * step_y;                               % resolution of the model in y direction
@@ -54,20 +50,7 @@ y_ = (y_min - 0.5*y_max):dy:(y_max + 0.5*y_max);                           % y-g
 z_ = z_min:dz:z_max;                                                       % z-grid (m)
 
 % Determination of the wind direction
-a = atand(abs((measured_y - stack_y) / (measured_x - stack_x)));
-if (stack_x <= measured_x & stack_y <= measured_y)
-    wind_direction = -90 - a;
-    HS_direction = a;
-elseif (stack_x > measured_x & stack_y <= measured_y)
-    wind_direction = 90 + a;
-    HS_direction = -a;
-elseif (stack_x > measured_x & stack_y > measured_y)
-    wind_direction = 90 - a;
-    HS_direction = a;
-elseif (stack_x <= measured_x & stack_y > measured_y)
-    wind_direction = -90 + a;
-    HS_direction = -a;
-end
+HS_direction = atan2(measured_y - stack_y, measured_x - stack_x) * 180 / pi;
 
 % -------------------------------------------------------------------------
 
@@ -103,10 +86,7 @@ hypotenuse=sqrt(x1.^2+y1.^2);
 downwind=cos(subtended).*hypotenuse;
 
 PC = [122.8 0.94470 24.1670 2.5334;90.673 0.93198 18.3330 1.8096; 61.141 0.91465 12.5 1.0857;34.459 0.86974 8.3330 0.72382;24.26 0.83660 6.25 0.54287; 15.209 0.81558 4.1667 0.36191];
-a=PC(stability,1);
-b=PC(stability,2);
-c=PC(stability,3);
-d=PC(stability,4);
+a=PC(stability,1); b=PC(stability,2); c=PC(stability,3); d=PC(stability,4);
 
 sig_z=a.*(downwind./1000).^b;
 sig_z(find(sig_z(:)>5000))=5000;
