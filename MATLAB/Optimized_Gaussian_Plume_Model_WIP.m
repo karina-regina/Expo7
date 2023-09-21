@@ -1,6 +1,6 @@
 
 close all; clear; clc;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 % SECTION 1: Configuration
 % Variables can be changed by the user ++++++++++++++++++++++++++++++++++++
