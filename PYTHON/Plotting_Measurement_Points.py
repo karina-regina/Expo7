@@ -22,7 +22,7 @@
 Desired_Coordinates=[50,50]
 
 #Input For Coordinates Of Initial Measurement Point Of Robot
-Measurement_Points=[[0,1]] 
+Measurement_Points=[[0,0]] 
 
 #Not All Of These Libraries Are Necessary, 
 #I Just Copy-Pasted Them From Some Of Our Other Code
@@ -69,7 +69,7 @@ while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_
          ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10)
     ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]])
     i+=1
-    plt.title(f'Route Of Robot ({i+1} Number Of Measurement Points Taken So Far)')
+    plt.title(f'Route Of Robot ({i+1} Number Of Measurement Points Taken So Far)(Distance From Objective Is {math.dist(Measurement_Points[-1],Desired_Coordinates)})')
     ax.legend(fontsize='xx-small',bbox_to_anchor=(1.1, 0),ncol=6)
     plt.draw()
     plt.pause(0.4)
