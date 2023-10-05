@@ -22,7 +22,7 @@
 Desired_Coordinates=[50,50]
 
 #Input For Coordinates Of Initial Measurement Point Of Robot
-Measurement_Points=[[0,1]] 
+Measurement_Points=[[0,0]] 
 
 #Not All Of These Libraries Are Necessary, 
 #I Just Copy-Pasted Them From Some Of Our Other Code
@@ -47,6 +47,12 @@ ax.scatter(Desired_Coordinates[0], Desired_Coordinates[1], s=30, marker='D',labe
 i=0
 Total_Distance=0
 
+theta=np.arange(0,10*math.pi, 2)
+print(theta)
+r = ((theta)**2)
+x = r*np.cos(theta)
+y = r*np.sin(theta)
+
 while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_Coordinates) >= 2:   
     #For-Loop And If Statements Make New Measurement Points, 
     #Makes Sure Robot Doesn't Pass Plot Boundaries And 
@@ -54,12 +60,12 @@ while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_
     for j in range(2):
         if Measurement_Points[-1][j]>100:
              Measurement_Points[-1][j]=100
-             Measurement_Points.append([Measurement_Points[-1][0]+np.random.randint(-20,0),Measurement_Points[-1][1]+np.random.randint(-20,0)])
+             Measurement_Points.append([Measurement_Points[-1][0]+x[i],Measurement_Points[-1][1]+y[i]])
         elif Measurement_Points[-1][j]<-100:
              Measurement_Points[-1][j]=-100
-             Measurement_Points.append([Measurement_Points[-1][0]+np.random.randint(0,20),Measurement_Points[-1][1]+np.random.randint(0,20)])         
+             Measurement_Points.append([Measurement_Points[-1][0]+x[i],Measurement_Points[-1][1]+y[i]])         
     else:
-         Measurement_Points.append([Measurement_Points[-1][0]+np.random.randint(-10,10),Measurement_Points[-1][1]+np.random.randint(-10,10)])
+         Measurement_Points.append([Measurement_Points[-1][0]+x[i],Measurement_Points[-1][1]+y[i]])
     if len(Measurement_Points)>=2:
         Total_Distance+=math.dist(Measurement_Points[-1],Measurement_Points[-2])
      #This If-Statement Is To Not Add To Legend After 23 Measurement Points. (Lack Of Space)
@@ -71,8 +77,11 @@ while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_
     i+=1
     plt.title(f'Route Of Robot ({i+1} Number Of Measurement Points Taken So Far)')
     ax.legend(fontsize='xx-small',bbox_to_anchor=(1.1, 0),ncol=6)
+    if i >= len(theta):
+         break
     plt.draw()
     plt.pause(0.4)
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {Measurement_Points[-1]}. The Objective Coordinates Were {Desired_Coordinates}')
 plt.ioff()
+plt.plot(x,y)  
 plt.show()
