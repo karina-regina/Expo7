@@ -10,7 +10,7 @@ windspeed = np.array([3.1, 5.0, 1.9, 6.2, 4.7, 6.9, 2.4, 5.0])
 y = np.zeros(np.size(x_sample))
 z = np.zeros(np.size(y_sample))
 stability_class = np.array([4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
-data= [x_sample, y_sample, y, z, windspeed, stability_class]
+x_sample, y_sample, y, z, windspeed, stability_class = data
 
 # Define the function for the Guassian plume model
 def func(data, x_leakage, y_leakage, z_leakage, emission_rate):
