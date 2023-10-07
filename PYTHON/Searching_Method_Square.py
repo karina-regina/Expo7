@@ -1,27 +1,26 @@
 #This Python Script Plots The Route Of The Robot And Objective Coordinates.
 
-#Right Now, The Route It Takes Depends On A Random Integer From -10 To 10. (Line #56, #59, #61) This Part Is Modifiable
+#Right Now, The Route It Takes Is A Spiral. To Make Changes To The Algorithm, Go To Line 
 #The Code Runs Until It Gets Within The 2 Meter Range.(Checked At Line #49) (Unlikely, Given How It Is Random)
 #If It Does Get Within The Range, It Stops. (In Future, Change So That It Stops Once It Finalizes Its Guess)
 #By Closing Plot, It Prints Total Distance Travelled, Number Of Measurements, Last Measurement Coordinates And Objective Coordinates.
 
-#Input Of Code Is At Line #21 And #24. 
-#To Add An Algorithm, Change Line #56, #59 And #61
-#To Change Minimum Distance From Objective At Which Code Stops, Change Line #49
+#Input Of Initial Measurement_Points And Objective Coordinates Is At Line #22 And #25. 
+#To Add An Algorithm, It Has Been Split Into 2 Locations. (Non-Iterative Calculations And Iterative Calculations)
 
 #Cons Of Code
 #It Is A Bit Long, There Are Ways To Shorten It.
-#Legend Stops At 23 Measurement Points. (More Won't Fit, A Fix Is To Call It M#i, So More Can Fit.)
 #It Gets Laggy Once In the Hundreds Of Measurement Points.
-#There Is No Algorithm Implemented Yet.
+#There Is No Algorithm Implemented Yet. (Just A Route)
 #Work Needs To Be Done To Make Sure Repetitious Measurement Points Aren't Taken
+#positive_condition And negative_condition Would Be Unnecessary In Some Algorithms, But Necessary For Those That Don't Calculate Whether Their Movements Are Feasible (It's A Layer Of Redundancy)
+#Calculations For positive_condition And negative_condition Have To Be A List With 2 Values, So They Have To Be Calculated Or Predetermined Regardless Of Whether Intended X And Y Calculations Are Always Feasible. 
 #(Add More If You See Them) 
 
-
-#Input For Coordinates Of Objective That Robot Is Heading Towards
+#Input For Coordinates Of Objective That Robot Is Heading Towards (Only Works With One)
 Desired_Coordinates=[50,50]
 
-#Input For Coordinates Of Initial Measurement Point Of Robot
+#Input For Coordinates Of Initial Measurement Point Of Robot (Can Start Out With Multiple)
 Measurement_Points=[[0,0]] 
 
 #Not All Of These Libraries Are Necessary, 
@@ -39,49 +38,79 @@ import statsmodels.api as sm
 import math
 import cmath
 
+#Setup For Interactive Plot
 plt.ion()
 fig, ax = plt.subplots(figsize=(7, 5))
 ax.set_xlim([-100, 100])
 ax.set_ylim([-100, 100])
 ax.scatter(Desired_Coordinates[0], Desired_Coordinates[1], s=30, marker='D',label='Objective')
+if len(Measurement_Points)>1:
+     for l in range(len(Measurement_Points)):
+          ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=10, color='b')
+          ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],color='black')
+annotation = plt.annotate('', xy=(0, 0),fontsize=8, xytext=(-130, 114))
+plt.title('Simulation Of The Route Of Robot')
+def update_annotation(new_text):
+    annotation.set_text(new_text)
+
+#Setup For While-Loop
 i=0
 Total_Distance=0
+Error_String='.'
+Redundancy=1
 
-theta=np.arange(0,10*math.pi, 2)
-print(theta)
-r = ((theta)**2)
-x = r*np.cos(theta)
-y = r*np.sin(theta)
+#This Is Where Non-Iterative Calculations For The Algorithm Belong 
+theta = np.linspace(0, 10 * np.pi, 25)
+radius = np.linspace(0, 100, 25)  
+x_coordinates = radius*np.cos(theta)
+y_coordinates = radius*np.sin(theta)
+x= np.diff(x_coordinates)
+y= np.diff(y_coordinates)
+negative_condition=[0,0]
+positive_condition=[0,0]
 
-while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_Coordinates) >= 2:   
+while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_Coordinates)*Redundancy >= 2:   
+    
+    #This Is Where Iterative Calculations For The Algorithm Belong. 
+    #move_direction Contains Movement In The X And Y Direction, 
+    #But Also positive_condition And negative_condition. These Are Lists With 2 Values (X And Y).
+    #They Act As A Contigency Plan In Case The First Values Lead To Outside The Feasible Range.
+    #Make Sure positive_condition And negative_condition exist (Can Be Calculated In The Non-Iterative Section As Well)
+    #Make Sure move_direction Is A List With 4 Elements, With The Last 2 Being Lists Of Length 2 And The First Two Being Integers Or Floats. Otherwise Code Breaks.
+    #If Algorithm Depends On A List In The Same Way This Route Does, Keep Into Account Length Of The List, Like It Is Done With This If Statement
+    if i >= len(theta)-1:
+         break
+    move_direction=[x[i],y[i],positive_condition,negative_condition]
+    
     #For-Loop And If Statements Make New Measurement Points, 
     #Makes Sure Robot Doesn't Pass Plot Boundaries And 
     #That Robot Doesn't Keep Getting Stuck In The Boundaries (X And Y)
+    Measurement_Points.append([])
     for j in range(2):
-        if Measurement_Points[-1][j]>100:
-             Measurement_Points[-1][j]=100
-             Measurement_Points.append([Measurement_Points[-1][0]+x[i],Measurement_Points[-1][1]+y[i]])
-        elif Measurement_Points[-1][j]<-100:
-             Measurement_Points[-1][j]=-100
-             Measurement_Points.append([Measurement_Points[-1][0]+x[i],Measurement_Points[-1][1]+y[i]])         
-    else:
-         Measurement_Points.append([Measurement_Points[-1][0]+x[i],Measurement_Points[-1][1]+y[i]])
+        if Measurement_Points[-2][j]+move_direction[j]>100:
+             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[2][j])
+        elif Measurement_Points[-2][j]+move_direction[j]<-100:
+             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[3][j])        
+        else:
+             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[j])  
+        if abs(Measurement_Points[-1][j]) > 100:
+             Redundancy=0
+             Measurement_Points.pop(-1)
+             Error_String=', Simulation Ended Due To An Error In Negative Or Positive Condition Calculation'
+             break
+        
+    #If Statement To Determine Whether This Calculation Of Total Distance Will Lead To Error
     if len(Measurement_Points)>=2:
         Total_Distance+=math.dist(Measurement_Points[-1],Measurement_Points[-2])
-     #This If-Statement Is To Not Add To Legend After 23 Measurement Points. (Lack Of Space)
-    if i<23:
-        ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, label=(f'Measurement #{i+1}'))
-    else:
-         ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10)
-    ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]])
+
+    #Updates To Plot And While-Loop
+    update_annotation(f'Number Of Measurements Taken {i+1} \nCurrent Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_Coordinates),ndigits =2)} Meters\nTotal Distance Robot Has Travelled So Far {round(Total_Distance,ndigits=2)} Meters')
+    ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='b')
+    ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],color='black')
     i+=1
-    plt.title(f'Route Of Robot ({i+1} Number Of Measurement Points Taken So Far)')
-    ax.legend(fontsize='xx-small',bbox_to_anchor=(1.1, 0),ncol=6)
-    if i >= len(theta):
-         break
     plt.draw()
     plt.pause(0.4)
-print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {Measurement_Points[-1]}. The Objective Coordinates Were {Desired_Coordinates}')
+
+print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {Measurement_Points[-1]}. The Objective Coordinates Were {Desired_Coordinates}{Error_String}')
 plt.ioff()
-plt.plot(x,y)  
 plt.show()
