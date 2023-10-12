@@ -13,14 +13,16 @@ import seaborn as sns
 
 #INPUT FOR GAS PLUME
 
-stability = 1#set from 1-6                                                                                      
-
-stack_x = 20#np.random.randint(-50,51)
-stack_y = 5#np.random.randint(-50,51)
-stack_height = 3#np.random.randint(1,11)      
-emission_rate = 1#np.random.randint(1,21)                                                                 
-windspeed= 4#np.random.randint(1,26)
-wind_direction= -135#np.random.randint(0,360)
+#set from 1-6
+stability = 1                                                                                      
+#Origin Coordinates Of Plume
+stack_x = np.random.randint(-50,51)
+stack_y = np.random.randint(-50,51)
+stack_height = np.random.randint(1,11) 
+emission_rate = np.random.randint(1,21)                                                                 
+windspeed= np.random.randint(1,26)
+#Wind Angle In Degrees
+wind_direction= np.random.randint(0,360)
 
 #INPUT FOR ALGORITHM
 
@@ -29,16 +31,16 @@ Measurement_Points=[[0,0]]
 
 #GRID & STEPSIZE CALCULATION 
 
-stability_str = ['Very unstable', 'Moderately unstable', 'Slightly unstable', 'Neutral', 'Moderately stable', 'Very stable'] # Possibly Useless
-ssv= stability_str[stability-1] # Possibly Useless
 x_range=np.arange(-100,100,0.5)
 y_range=np.arange(-100,100,0.5)
 z_range=np.arange(0,50,0.5)
+#It Turns Each Into 3D-Arrays For Calculations In All 3 Axis
 X,Y,Z = np.meshgrid(x_range,y_range,z_range)
 
 #WIND RELATED CALCULATIONS
 
-#height_slice_direction= math.atan2(measured_y - stack_y, measured_x - stack_x) *(180/(math.pi))
+#For Future (height_slice_direction= math.atan2(measured_y - stack_y, measured_x - stack_x) *(180/(math.pi)))
+#3D-Arrays For Distance Between Coordinate & Origin
 x_origin=X-stack_x
 y_origin=Y-stack_y
 
@@ -47,13 +49,16 @@ wind_ycomponent=windspeed*math.cos(math.radians(wind_direction-180))
 
 dot_product=wind_xcomponent*x_origin+wind_ycomponent*y_origin
 magnitudes= windspeed*((x_origin**2)+(y_origin**2))**0.5
-subtended=np.arccos(dot_product/(magnitudes+1e-5))
+subtended=np.arccos(dot_product/(magnitudes))
 hypotenuse=((x_origin**2)+(y_origin**2))**0.5
+#Downwind Is X Of Gaussian Plume Formula 
 downwind=np.cos(subtended)*hypotenuse
+#Turns It Into Complex Format To Make Correct Calculations Later On.
 downwindimag=np.vectorize(complex)(downwind.real, downwind.imag)
 
 #PASQUILL CONSTANTS & SIGMA CALCULATION
 
+#Pasquill Constants Found In Resources
 stability_class= {1 : (122.8,0.94470,24.1670,2.5334),
                   2: (90.673, 0.93198, 18.3330, 1.8096),
                   3: (61.141, 0.91465, 12.5, 1.0857),
@@ -65,7 +70,6 @@ P_a=stability_class[stability][0]
 P_b=stability_class[stability][1]
 P_c=stability_class[stability][2]
 P_d=stability_class[stability][3]
-
 sig_z = P_a*(abs((downwind/1000))**P_b)
 sig_z[sig_z > 5000] = 5000
 theta=0.017453293*(P_c-P_d*np.log((downwindimag/1000)))
@@ -77,36 +81,47 @@ crosswind=np.sin(subtended)*hypotenuse
 indix,indiy,indiz=np.where((downwind > 0))
 Concentration= np.zeros(np.shape(downwind))
 Concentration[indix,indiy,indiz] =1e6*((emission_rate/(2*math.pi*windspeed*sig_y[indix,indiy,indiz]*sig_z[indix,indiy,indiz]))*(math.e**(-crosswind[indix,indiy,indiz]**2/(2*sig_y[indix,indiy,indiz]**2))* (math.e**(-(Z[indix,indiy,indiz]-stack_height)**2/(2*sig_z[indix,indiy,indiz]**2))+ math.e**(-(Z[indix,indiy,indiz]+stack_height)**2/(2*sig_z[indix,indiy,indiz]**2)))))
+#Prevents Issues Regarding Algorithm And Measurements
 Concentration[Concentration < 1e-2] = 0
 Concentration2D=(Concentration[:,:, 0])
 
-#Setup For Interactive Plot
+#SETUP FOR INTERACTIVE PLOT
 
+#plt.ion Allows For The Continuously Updated Plot 
 plt.ion()
 fig, ax = plt.subplots(figsize=(7, 5))
 ax.set_xlim([-100, 100])
 ax.set_ylim([-100, 100])
+#Heatmap
 plt.pcolor(x_range, y_range, Concentration2D[:,:], shading=None, cmap='jet')
+#Checks For Length Of Measurement Points
 if len(Measurement_Points)>1:
      for l in range(len(Measurement_Points)):
           ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=5,alpha=0.5, color='white')
           ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],s=4,alpha=0.5,color='white')
+#Plots Origin Point Of Plume
 ax.scatter(stack_x,stack_y,s=8,color='white',marker='x',label='Gas Leak Source')
+#Setup For Info At Top-Left Of Plot
 annotation = plt.annotate('', xy=(0, 0),fontsize=8, xytext=(-130, 114))
 plt.title('Simulation Of The Route Of Robot')
+#Setup For Updating Info At Top-Left Of Plot
 def update_annotation(new_text):
     annotation.set_text(new_text)
 plt.legend()
 plt.colorbar()
 
-#Setup For While-Loop
+#SETUP FOR WHILE-LOOP
 
 i=0
 Total_Distance=0
+#This Is For When negative_condition Or positive_condition Have Invalid Values
 Error_String='.'
+#Redundancy Is A Method To Break The While-Loop From Inside A For-Loop As An Extra Measure
 Redundancy=1
 Concentration_At_Measurement = []
+#This Is Distance Between Gas Leak And Robot
 RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y])
+#Adds Concentration To Concentration_At_Measurement For Each Coordinate.]
 for XYCoordinate in Measurement_Points:
      Concentration_At_Measurement.append(Concentration2D[((round(100+XYCoordinate[0]))*2),((round(100+XYCoordinate[1]))*2)])
 
@@ -128,7 +143,6 @@ while RadiusCheck*Redundancy >= 2:
         if sum(Concentration_At_Measurement) > 0:
             negative_condition=[0,0]
             positive_condition=[0,0]
-            print('wo')
             move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
         else:
             #In Case Of Concentration Never Having Been Higher Than 0
@@ -148,32 +162,38 @@ while RadiusCheck*Redundancy >= 2:
         positive_condition=[0,0]
         move_direction=[0,0,positive_condition,negative_condition]
         
-    #Redundancy Checks & Next Position Calculation
+    #REDUNDANCY CHECKS & NEXT POSITION CALCULATION
 
     RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
     Measurement_Points.append([])
+    #For-loop Takes Into Account X & Y.
     for j in range(2):
+        #If Suggested move_direction Is Infeasible, It Uses positive_condition
         if Measurement_Points[-2][j]+move_direction[j]>100:
              Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[2][j])
+        #If Suggested move_direction Is Infeasible, It Uses negative_condition
         elif Measurement_Points[-2][j]+move_direction[j]<-100:
-             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[3][j])        
+             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[3][j])
+        #Uses Normal move_direction Values     
         else:
              Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[j])  
+        #Checks If Newest Measurement Point Is Invalid
         if abs(Measurement_Points[-1][j]) > 100:
              Redundancy=0
              Measurement_Points.pop(-1)
              Error_String=', Simulation Ended Due To An Error In Negative Or Positive Condition Calculation'
              break
+        #Rounds To The Nearest Half. (Due To Resolution Of Gas Plume Being In 0.5 By 0.5 Meters)
         Measurement_Points[-1][j]=(round(Measurement_Points[-1][j]*2)/2)
     if len(Measurement_Points)>=2:
         Total_Distance+=math.dist(Measurement_Points[i],Measurement_Points[i-1])
 
-    #Updates To Plot And While-Loop
+    #UPDATES TO PLOT & WHILE-LOOP
+
     update_annotation(f'Current Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), [stack_x, stack_y]),ndigits =2)} Meters\nRobot Has Travelled {round(Total_Distance,ndigits=2)} Meters & Taken {i+1} Amount Of Measurements\nCurrent Concentration At Coordinate Is {round(Concentration_At_Measurement[-1],ndigits=2)}')
     ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='white',alpha=0.5)
     ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.5,color='white')
     i+=1
-    print(Measurement_Points[-1])
     Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][0]))*2)][((round(100+Measurement_Points[i][1]))*2)])  
     plt.draw()
     plt.pause(0.4)
