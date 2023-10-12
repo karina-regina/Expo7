@@ -15,17 +15,14 @@ import seaborn as sns
 
 stability = 1#set from 1-6                                                                                      
 
-stack_x = 34
-stack_y = 13
+stack_x = np.random.randint(-50,50)
+stack_y = np.random.randint(-50,50)
 stack_height = 4      
 emission_rate = 1                                                                 
 windspeed=4.7
 wind_direction= 40
 
 #INPUT FOR ALGORITHM
-
-#Input For Coordinates Of Objective That Robot Is Heading Towards (Only Works With One)
-Desired_Coordinates=[50,50]
 
 #Input For Coordinates Of Initial Measurement Point Of Robot (Can Start Out With Multiple)
 Measurement_Points=[[0,0]] 
@@ -120,23 +117,29 @@ y_coordinates = radius*np.sin(theta)
 x= np.diff(x_coordinates)
 y= np.diff(y_coordinates)
 
-while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_Coordinates)*Redundancy >= 2:   
+while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y])*Redundancy >= 2:   
     
     #This Is Where Iterative Calculations For The Algorithm Belong.
-     
-    if Concentration_At_Measurement[i] == 0:
+
+    if Concentration_At_Measurement[i] < 1/10:
+        #In Case Of Overshooting
         if sum(Concentration_At_Measurement) > 0:
-             move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
+            negative_condition=[0,0]
+            positive_condition=[0,0]
+            move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
         else:
+            #In Case Of Concentration Never Having Been Higher Than 0
             if i >= len(theta)-1:
                 break
             negative_condition=[0,0]
             positive_condition=[0,0]
             move_direction=[x[i],y[i],positive_condition,negative_condition]
+    #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
     elif Concentration_At_Measurement[i] < Concentration_At_Measurement[(len(Concentration_At_Measurement)-1)%len(Concentration_At_Measurement)]:
         positive_condition=np.random.randint(-20,0)
         negative_condition=np.random.randint(0,20)
         move_direction=[np.random.randint(-10,10),np.random.randint(-10,10),positive_condition,negative_condition]
+    #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
     else:
         positive_condition=np.random.randint(-20,0)
         negative_condition=np.random.randint(0,20)
@@ -163,7 +166,7 @@ while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_
 
     #Updates To Plot And While-Loop
 
-    update_annotation(f'Number Of Measurements Taken {i+1} \nCurrent Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_Coordinates),ndigits =2)} Meters\nTotal Distance Robot Has Travelled So Far {round(Total_Distance,ndigits=2)} Meters')
+    update_annotation(f'Number Of Measurements Taken {i+1} \nCurrent Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), [stack_x, stack_y]),ndigits =2)} Meters\nTotal Distance Robot Has Travelled So Far {round(Total_Distance,ndigits=2)} Meters')
     ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='white',alpha=0.7)
     ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.7,color='white')
     Concentration_At_Measurement.append(Concentration2D[round(Measurement_Points[i][0]*2)][round(2*Measurement_Points[i][1])])  
@@ -171,6 +174,6 @@ while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), Desired_
     plt.draw()
     plt.pause(0.4)
 
-print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]}. The Objective Coordinates Were {Desired_Coordinates}{Error_String}')
+print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
