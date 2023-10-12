@@ -15,12 +15,12 @@ import seaborn as sns
 
 stability = 1#set from 1-6                                                                                      
 
-stack_x = np.random.randint(-50,50)
-stack_y = np.random.randint(-50,50)
-stack_height = 4      
-emission_rate = 1                                                                 
-windspeed=4.7
-wind_direction= 40
+stack_x = 20#np.random.randint(-50,51)
+stack_y = 5#np.random.randint(-50,51)
+stack_height = 3#np.random.randint(1,11)      
+emission_rate = 1#np.random.randint(1,21)                                                                 
+windspeed= 4#np.random.randint(1,26)
+wind_direction= -135#np.random.randint(0,360)
 
 #INPUT FOR ALGORITHM
 
@@ -76,7 +76,8 @@ sig_y=(465.11628*downwind/1000)*np.tan(theta)
 crosswind=np.sin(subtended)*hypotenuse
 indix,indiy,indiz=np.where((downwind > 0))
 Concentration= np.zeros(np.shape(downwind))
-Concentration[indix,indiy,indiz] =((emission_rate/(2*math.pi*windspeed*sig_y[indix,indiy,indiz]*sig_z[indix,indiy,indiz]))*(math.e**(-crosswind[indix,indiy,indiz]**2/(2*sig_y[indix,indiy,indiz]**2))* (math.e**(-(Z[indix,indiy,indiz]-stack_height)**2/(2*sig_z[indix,indiy,indiz]**2))+ math.e**(-(Z[indix,indiy,indiz]+stack_height)**2/(2*sig_z[indix,indiy,indiz]**2)))))
+Concentration[indix,indiy,indiz] =1e6*((emission_rate/(2*math.pi*windspeed*sig_y[indix,indiy,indiz]*sig_z[indix,indiy,indiz]))*(math.e**(-crosswind[indix,indiy,indiz]**2/(2*sig_y[indix,indiy,indiz]**2))* (math.e**(-(Z[indix,indiy,indiz]-stack_height)**2/(2*sig_z[indix,indiy,indiz]**2))+ math.e**(-(Z[indix,indiy,indiz]+stack_height)**2/(2*sig_z[indix,indiy,indiz]**2)))))
+Concentration[Concentration < 1e-2] = 0
 Concentration2D=(Concentration[:,:, 0])
 
 #Setup For Interactive Plot
@@ -88,9 +89,9 @@ ax.set_ylim([-100, 100])
 plt.pcolor(x_range, y_range, Concentration2D[:,:], shading=None, cmap='jet')
 if len(Measurement_Points)>1:
      for l in range(len(Measurement_Points)):
-          ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=5,alpha=0.7, color='white')
-          ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],s=4,alpha=0.7,color='white')
-plt.scatter(stack_x,stack_y,s=8,color='white',marker='x',label='Gas Leak Source')
+          ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=5,alpha=0.5, color='white')
+          ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],s=4,alpha=0.5,color='white')
+ax.scatter(stack_x,stack_y,s=8,color='white',marker='x',label='Gas Leak Source')
 annotation = plt.annotate('', xy=(0, 0),fontsize=8, xytext=(-130, 114))
 plt.title('Simulation Of The Route Of Robot')
 def update_annotation(new_text):
@@ -105,48 +106,51 @@ Total_Distance=0
 Error_String='.'
 Redundancy=1
 Concentration_At_Measurement = []
+RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y])
 for XYCoordinate in Measurement_Points:
-     Concentration_At_Measurement.append(Concentration2D[round(2*XYCoordinate[0]),round(2*XYCoordinate[1])])
+     Concentration_At_Measurement.append(Concentration2D[((round(100+XYCoordinate[0]))*2),((round(100+XYCoordinate[1]))*2)])
 
 #This Is Where Non-Iterative Calculations For The Algorithm Belong 
 
-theta = np.linspace(0, 10 * np.pi, 25)
+Spiral = np.linspace(0, 10 * np.pi, 25)
 radius = np.linspace(0, 100, 25)  
-x_coordinates = radius*np.cos(theta)
-y_coordinates = radius*np.sin(theta)
+x_coordinates = radius*np.cos(Spiral)
+y_coordinates = radius*np.sin(Spiral)
 x= np.diff(x_coordinates)
 y= np.diff(y_coordinates)
 
-while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y])*Redundancy >= 2:   
+while RadiusCheck*Redundancy >= 2:   
     
     #This Is Where Iterative Calculations For The Algorithm Belong.
 
-    if Concentration_At_Measurement[i] < 1/10:
+    if Concentration_At_Measurement[i] <= 0:
         #In Case Of Overshooting
         if sum(Concentration_At_Measurement) > 0:
             negative_condition=[0,0]
             positive_condition=[0,0]
+            print('wo')
             move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
         else:
             #In Case Of Concentration Never Having Been Higher Than 0
-            if i >= len(theta)-1:
+            if i >= len(Spiral)-1:
                 break
             negative_condition=[0,0]
             positive_condition=[0,0]
             move_direction=[x[i],y[i],positive_condition,negative_condition]
     #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
-    elif Concentration_At_Measurement[i] < Concentration_At_Measurement[(len(Concentration_At_Measurement)-1)%len(Concentration_At_Measurement)]:
-        positive_condition=np.random.randint(-20,0)
-        negative_condition=np.random.randint(0,20)
-        move_direction=[np.random.randint(-10,10),np.random.randint(-10,10),positive_condition,negative_condition]
+    elif Concentration_At_Measurement[i] < Concentration_At_Measurement[i-1]:
+        negative_condition=[0,0]
+        positive_condition=[0,0]
+        move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
     #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
-    else:
-        positive_condition=np.random.randint(-20,0)
-        negative_condition=np.random.randint(0,20)
-        move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0]+np.random.randint(-1,1),-Measurement_Points[i][1]-Measurement_Points[i-1][1]+np.random.randint(-1,1),positive_condition,negative_condition]
-    
+    elif Concentration_At_Measurement[i] >= Concentration_At_Measurement[i-1]:
+        negative_condition=[0,0]
+        positive_condition=[0,0]
+        move_direction=[0,0,positive_condition,negative_condition]
+        
     #Redundancy Checks & Next Position Calculation
 
+    RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
     Measurement_Points.append([])
     for j in range(2):
         if Measurement_Points[-2][j]+move_direction[j]>100:
@@ -160,20 +164,19 @@ while math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,
              Measurement_Points.pop(-1)
              Error_String=', Simulation Ended Due To An Error In Negative Or Positive Condition Calculation'
              break
-        Measurement_Points[-2][j]=round(2*Measurement_Points[-2][j])/2
+        Measurement_Points[-1][j]=(round(Measurement_Points[-1][j]*2)/2)
     if len(Measurement_Points)>=2:
         Total_Distance+=math.dist(Measurement_Points[i],Measurement_Points[i-1])
 
     #Updates To Plot And While-Loop
-
-    update_annotation(f'Number Of Measurements Taken {i+1} \nCurrent Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), [stack_x, stack_y]),ndigits =2)} Meters\nTotal Distance Robot Has Travelled So Far {round(Total_Distance,ndigits=2)} Meters')
-    ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='white',alpha=0.7)
-    ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.7,color='white')
-    Concentration_At_Measurement.append(Concentration2D[round(Measurement_Points[i][0]*2)][round(2*Measurement_Points[i][1])])  
+    update_annotation(f'Current Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), [stack_x, stack_y]),ndigits =2)} Meters\nRobot Has Travelled {round(Total_Distance,ndigits=2)} Meters & Taken {i+1} Amount Of Measurements\nCurrent Concentration At Coordinate Is {round(Concentration_At_Measurement[-1],ndigits=2)}')
+    ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='white',alpha=0.5)
+    ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.5,color='white')
     i+=1
+    print(Measurement_Points[-1])
+    Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][0]))*2)][((round(100+Measurement_Points[i][1]))*2)])  
     plt.draw()
     plt.pause(0.4)
-
-print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
+print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {Concentration_At_Measurement[-1]}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
