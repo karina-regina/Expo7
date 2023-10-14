@@ -129,12 +129,10 @@ for XYCoordinate in Measurement_Points:
 
 #This Is Where Non-Iterative Calculations For The Algorithm Belong 
 
-Spiral = np.linspace(0, 10 * np.pi, 25)
-radius = np.linspace(0, 100, 25)  
-x_coordinates = radius*np.cos(Spiral)
-y_coordinates = radius*np.sin(Spiral)
-x= np.diff(x_coordinates)
-y= np.diff(y_coordinates)
+octax = np.array([0,31.82,0, -31.82, -45, -31.82, 0, 31.82,45,75, 53.03, 0, -53.03, -75, -53.03, 0, 53.03 ])
+octay = np.array([0,31.82, 45, 31.82, 0, -31.82, -45, -31.82,0,0, 53.03, 75, 53.03, 0, -53.03, -75, -53.03])
+x= np.diff(octax)
+y= np.diff(octay)
 
 while RadiusCheck*Redundancy >= 2:   
     RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
@@ -149,7 +147,7 @@ while RadiusCheck*Redundancy >= 2:
             move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
         else:
             #In Case Of Concentration Never Having Been Higher Than 0
-            if i >= len(Spiral)-1:
+            if i >= len(octax)-1:
                 break
             negative_condition=[0,0]
             positive_condition=[0,0]
