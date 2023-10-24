@@ -139,12 +139,12 @@ while RadiusCheck*Redundancy >= 2:
     print(Measurement_Points[-1], '\nc', Concentration_At_Measurement[-1])
     #This Is Where Iterative Calculations For The Algorithm Belong.
 
-    if Concentration_At_Measurement[i] <= 0:
+    if Concentration_At_Measurement[-1] <= 0:
         #In Case Of Overshooting
         if sum(Concentration_At_Measurement) > 0:
             negative_condition=[0,0]
             positive_condition=[0,0]
-            move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
+            move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2][0],-Measurement_Points[-1][1]-Measurement_Points[-2][1],positive_condition,negative_condition]
         else:
             #In Case Of Concentration Never Having Been Higher Than 0
             if i >= len(octax)-1:
@@ -153,12 +153,12 @@ while RadiusCheck*Redundancy >= 2:
             positive_condition=[0,0]
             move_direction=[x[i],y[i],positive_condition,negative_condition]
     #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
-    elif Concentration_At_Measurement[i] < Concentration_At_Measurement[i-1]:
+    elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-2]:
         negative_condition=[0,0]
         positive_condition=[0,0]
-        move_direction=[-Measurement_Points[i][0]-Measurement_Points[i-1][0],-Measurement_Points[i][1]-Measurement_Points[i-1][1],positive_condition,negative_condition]
+        move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2][0],-Measurement_Points[-1][1]-Measurement_Points[-2][1],positive_condition,negative_condition]
     #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
-    elif Concentration_At_Measurement[i] >= Concentration_At_Measurement[i-1]:
+    elif Concentration_At_Measurement[-1] >= Concentration_At_Measurement[-2]:
         negative_condition=[0,0]
         positive_condition=[0,0]
         move_direction=[0,0,positive_condition,negative_condition]

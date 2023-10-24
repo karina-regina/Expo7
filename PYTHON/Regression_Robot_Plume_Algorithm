@@ -28,7 +28,7 @@ wind_direction= 90 #np.random.randint(0,360)
 #INPUT FOR ALGORITHM
 
 #Input For Coordinates Of Initial Measurement Point Of Robot (Can Start Out With Multiple)
-Measurement_Points=[[0,0]] 
+Measurement_Points=[[0,0],[20,5.5]] 
 
 #GRID & STEPSIZE CALCULATION 
 
@@ -98,9 +98,9 @@ ax.set_ylim([-100, 100])
 plt.pcolor(x_range, y_range, Concentration2D, shading=None, cmap='jet')
 #Checks For Length Of Measurement Points
 if len(Measurement_Points)>1:
-     for l in range(len(Measurement_Points)):
-          ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=5,alpha=0.5, color='white')
-          ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],s=4,alpha=0.5,color='white')
+     for l in range(1,len(Measurement_Points)):
+          ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=10,alpha=0.5, color='white')
+          ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],alpha=0.5,color='white')
 #Plots Origin Point Of Plume
 ax.scatter(stack_x,stack_y,s=8,color='white',marker='x',label='Gas Leak Source')
 #Setup For Info At Top-Left Of Plot
@@ -129,12 +129,7 @@ for XYCoordinate in Measurement_Points:
 
 #This Is Where Non-Iterative Calculations For The Algorithm Belong 
 
-Spiral = np.linspace(0, 10 * np.pi, 25)
-radius = np.linspace(0, 100, 25)  
-x_coordinates = radius*np.cos(Spiral)
-y_coordinates = radius*np.sin(Spiral)
-x= np.diff(x_coordinates)
-y= np.diff(y_coordinates)
+
 
 while RadiusCheck*Redundancy >= 2:   
     RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
@@ -149,11 +144,9 @@ while RadiusCheck*Redundancy >= 2:
             move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2][0],-Measurement_Points[-1][1]-Measurement_Points[-2][1],positive_condition,negative_condition]
         else:
             #In Case Of Concentration Never Having Been Higher Than 0
-            if i >= len(Spiral)-1:
-                break
             negative_condition=[0,0]
             positive_condition=[0,0]
-            move_direction=[x[i],y[i],positive_condition,negative_condition]
+            move_direction=[0,0,positive_condition,negative_condition]
     #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
     elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-2]:
         negative_condition=[0,0]
@@ -198,7 +191,7 @@ while RadiusCheck*Redundancy >= 2:
     i+=1
     Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][1]))*2)][((round(100+Measurement_Points[i][0]))*2)])  
     plt.draw()
-    plt.pause(2)
+    plt.pause(0.4)
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {Concentration_At_Measurement[-1]}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
