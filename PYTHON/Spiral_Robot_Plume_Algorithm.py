@@ -198,7 +198,7 @@ while RadiusCheck*Redundancy >= 2:
     i+=1
     Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][1]))*2)][((round(100+Measurement_Points[i][0]))*2)])  
     plt.draw()
-    plt.pause(2)
+    plt.pause(0.4)
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {Concentration_At_Measurement[-1]}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
