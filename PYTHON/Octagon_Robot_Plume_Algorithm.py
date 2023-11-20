@@ -94,7 +94,7 @@ fig, ax = plt.subplots(figsize=(7, 5))
 ax.set_xlim([-100, 100])
 ax.set_ylim([-100, 100])
 #Heatmap
-plt.contour(x_range, y_range, Concentration2D,cmap='summer',s=3)
+#plt.contour(x_range, y_range, Concentration2D,cmap='summer',s=3)
 plt.pcolor(x_range, y_range, Concentration2D, shading=None, cmap='jet')
 #Checks For Length Of Measurement Points
 if len(Measurement_Points)>1:
