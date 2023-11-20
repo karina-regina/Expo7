@@ -23,7 +23,7 @@ stack_height = 3 #np.random.randint(1,11)
 emission_rate = 10 #np.random.randint(1,21)                                                                 
 windspeed= 4.7 #np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= 90 #np.random.randint(0,360)
+wind_direction= 45 #np.random.randint(0,360)
 
 #INPUT FOR ALGORITHM
 
@@ -144,7 +144,7 @@ while RadiusCheck*Redundancy >= 2:
         if sum(Concentration_At_Measurement) > 0:
             negative_condition=[0,0]
             positive_condition=[0,0]
-            move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2%len(Concentration_At_Measurement)][0],-Measurement_Points[-1][1]-Measurement_Points[-2%len(Concentration_At_Measurement)][1],positive_condition,negative_condition]
+            move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-(2%len(Concentration_At_Measurement))][0],-Measurement_Points[-1][1]-Measurement_Points[-(2%len(Concentration_At_Measurement))][1],positive_condition,negative_condition]
         else:
             #In Case Of Concentration Never Having Been Higher Than 0
             if i >= len(octax)-1:
@@ -153,12 +153,12 @@ while RadiusCheck*Redundancy >= 2:
             positive_condition=[0,0]
             move_direction=[x[i],y[i],positive_condition,negative_condition]
     #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
-    elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-2%len(Concentration_At_Measurement)]:
+    elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-(2%len(Concentration_At_Measurement))]:
         negative_condition=[0,0]
         positive_condition=[0,0]
-        move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2%len(Concentration_At_Measurement)][0],-Measurement_Points[-1][1]-Measurement_Points[-2%len(Concentration_At_Measurement)][1],positive_condition,negative_condition]
+        move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-(2%len(Concentration_At_Measurement))][0],-Measurement_Points[-1][1]-Measurement_Points[-(2%len(Concentration_At_Measurement))][1],positive_condition,negative_condition]
     #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
-    elif Concentration_At_Measurement[-1] >= Concentration_At_Measurement[-2%len(Concentration_At_Measurement)]:
+    elif Concentration_At_Measurement[-1] >= Concentration_At_Measurement[-(2%len(Concentration_At_Measurement))]:
         negative_condition=[0,0]
         positive_condition=[0,0]
         move_direction=[0,0,positive_condition,negative_condition]

@@ -17,18 +17,18 @@ import seaborn as sns
 stability = 1                                                                                      
 #Origin Coordinates Of Plume
 angle= np.random.uniform(0, 2 * np.pi)
-stack_x = 54#np.random.uniform(0, 51) * np.cos(angle)
-stack_y = 54 #np.random.uniform(0, 51) * np.sin(angle)
+stack_x = -45 #np.random.uniform(0, 51) * np.cos(angle)
+stack_y = 45 #np.random.uniform(0, 51) * np.sin(angle)
 stack_height = 3 #np.random.randint(1,11) 
 emission_rate = 10 #np.random.randint(1,21)                                                                 
 windspeed= 4.7 #np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= 90 #np.random.randint(0,360)
+wind_direction= 35*np.pi/20 #np.random.randint(0,360)
 
 #INPUT FOR ALGORITHM
 
 #Input For Coordinates Of Initial Measurement Point Of Robot (Can Start Out With Multiple)
-Measurement_Points=[[0,0],[20,5.5]] 
+Measurement_Points=[[0,0]] 
 
 #GRID & STEPSIZE CALCULATION 
 
@@ -45,8 +45,8 @@ X,Y,Z = np.meshgrid(x_range,y_range,z_range)
 x_origin=X-stack_x
 y_origin=Y-stack_y
 
-wind_xcomponent=windspeed*math.sin(math.radians(wind_direction-180))
-wind_ycomponent=windspeed*math.cos(math.radians(wind_direction-180))
+wind_xcomponent=windspeed*math.sin(wind_direction-np.pi)
+wind_ycomponent=windspeed*math.cos(wind_direction-np.pi)
 
 dot_product=wind_xcomponent*x_origin+wind_ycomponent*y_origin
 magnitudes= windspeed*((x_origin**2)+(y_origin**2))**0.5
@@ -84,7 +84,7 @@ Concentration= np.zeros(np.shape(downwind))
 Concentration[indix,indiy,indiz] =((emission_rate/(2*math.pi*windspeed*sig_y[indix,indiy,indiz]*sig_z[indix,indiy,indiz]))*(math.e**(-crosswind[indix,indiy,indiz]**2/(2*sig_y[indix,indiy,indiz]**2))* (math.e**(-(Z[indix,indiy,indiz]-stack_height)**2/(2*sig_z[indix,indiy,indiz]**2))+ math.e**(-(Z[indix,indiy,indiz]+stack_height)**2/(2*sig_z[indix,indiy,indiz]**2)))))
 #Prevents Issues Regarding Algorithm And Measurements
 Concentration[Concentration < 3e-4] = 0
-Concentration2D=(Concentration[:,:, 0].T)
+Concentration2D=(Concentration[:,:, 0])
 
 #SETUP FOR INTERACTIVE PLOT
 
@@ -113,7 +113,6 @@ plt.legend()
 plt.colorbar()
 
 #SETUP FOR WHILE-LOOP
-
 i=0
 Total_Distance=0
 #This Is For When negative_condition Or positive_condition Have Invalid Values
@@ -128,8 +127,13 @@ for XYCoordinate in Measurement_Points:
      Concentration_At_Measurement.append(Concentration2D[((round(100+XYCoordinate[1]))*2),((round(100+XYCoordinate[0]))*2)])
 
 #This Is Where Non-Iterative Calculations For The Algorithm Belong 
-
-
+step1ss,step2ss=5,5
+zeroCpoint=[]
+phase1=True
+phase3=False
+phase4=False
+correction=20
+wind_dir=(3*np.pi/2- wind_direction)-np.pi/2
 
 while RadiusCheck*Redundancy >= 2:   
     RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
@@ -141,23 +145,46 @@ while RadiusCheck*Redundancy >= 2:
         if sum(Concentration_At_Measurement) > 0:
             negative_condition=[0,0]
             positive_condition=[0,0]
-            move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2][0],-Measurement_Points[-1][1]-Measurement_Points[-2][1],positive_condition,negative_condition]
-        else:
+            zeroCpoint.append(Measurement_Points[-1])
+            if phase1 == True:
+                step1ss=-step1ss
+                phase1=False
+                move_direction=[Measurement_Points[np.where(np.array(Concentration_At_Measurement)>0)[0][0]][0]-Measurement_Points[-1][0]+step1ss*np.cos(wind_dir),Measurement_Points[np.where(np.array(Concentration_At_Measurement)>0)[0][0]][1]-Measurement_Points[-1][1]+step1ss*np.sin(wind_dir),positive_condition,negative_condition]
+            else:
+                phase3=True
+                move_direction=[(zeroCpoint[0][0]-zeroCpoint[-1][0])/2 -10*np.sin(wind_dir),(zeroCpoint[0][1]-zeroCpoint[-1][1])/2 + 10*np.cos(wind_dir),positive_condition,negative_condition]
+        else:   
             #In Case Of Concentration Never Having Been Higher Than 0
             negative_condition=[0,0]
             positive_condition=[0,0]
             move_direction=[0,0,positive_condition,negative_condition]
     #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
-    elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-2]:
+    elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-(2%len(Concentration_At_Measurement))]:
         negative_condition=[0,0]
         positive_condition=[0,0]
-        move_direction=[-Measurement_Points[-1][0]-Measurement_Points[-2][0],-Measurement_Points[-1][1]-Measurement_Points[-2][1],positive_condition,negative_condition]
+        move_direction=[step1ss*np.cos(wind_dir),step1ss*np.sin(wind_dir),positive_condition,negative_condition]
+        if phase4 == True:
+            step4ss=4
+            if correction == 0:
+                break
+            move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]
+            correction=0
+
     #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
-    elif Concentration_At_Measurement[-1] >= Concentration_At_Measurement[-2]:
+    elif Concentration_At_Measurement[-1] >= Concentration_At_Measurement[-(2%len(Concentration_At_Measurement))]:
         negative_condition=[0,0]
         positive_condition=[0,0]
-        move_direction=[0,0,positive_condition,negative_condition]
-        
+        move_direction=[(7*step1ss/4)*np.cos(wind_dir),(7*step1ss/4)*np.sin(wind_dir),positive_condition,negative_condition]
+        if phase3 == True:
+            move_direction=[20*np.sin(wind_dir),-20*np.cos(wind_dir),positive_condition,negative_condition]
+            phase3=False
+            phase4=True
+        elif phase4 == True:
+            if correction == 20:
+                step4ss=-4
+                correction=0
+            move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]
+
     #REDUNDANCY CHECKS & NEXT POSITION CALCULATION
 
     Measurement_Points.append([])
@@ -189,9 +216,9 @@ while RadiusCheck*Redundancy >= 2:
     ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='white',alpha=0.5)
     ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.5,color='white')
     i+=1
-    Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][1]))*2)][((round(100+Measurement_Points[i][0]))*2)])  
+    Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][1]))*2)-1][((round(100+Measurement_Points[i][0]))*2)-1])  
     plt.draw()
     plt.pause(0.4)
-print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {Concentration_At_Measurement[-1]}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
+print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
