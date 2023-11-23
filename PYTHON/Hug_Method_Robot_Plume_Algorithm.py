@@ -17,18 +17,18 @@ import seaborn as sns
 stability = 1                                                                                      
 #Origin Coordinates Of Plume
 angle= np.random.uniform(0, 2 * np.pi)
-stack_x = -45 #np.random.uniform(0, 51) * np.cos(angle)
-stack_y = 45 #np.random.uniform(0, 51) * np.sin(angle)
+stack_x = 45 #np.random.uniform(0, 51) * np.cos(angle)
+stack_y = -45 #np.random.uniform(0, 51) * np.sin(angle)
 stack_height = 3 #np.random.randint(1,11) 
 emission_rate = 10 #np.random.randint(1,21)                                                                 
 windspeed= 4.7 #np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= 35*np.pi/20 #np.random.randint(0,360)
+wind_direction= np.pi/2 #np.random.randint(0,360)
 
 #INPUT FOR ALGORITHM
 
 #Input For Coordinates Of Initial Measurement Point Of Robot (Can Start Out With Multiple)
-Measurement_Points=[[0,0]] 
+Measurement_Points=[[-50,-5]] 
 
 #GRID & STEPSIZE CALCULATION 
 
