@@ -18,12 +18,12 @@ stability = 1
 #Origin Coordinates Of Plume
 angle= np.random.uniform(0, 2 * np.pi)
 stack_x = 45 #np.random.uniform(0, 51) * np.cos(angle)
-stack_y = -45 #np.random.uniform(0, 51) * np.sin(angle)
+stack_y = -5 #np.random.uniform(0, 51) * np.sin(angle)
 stack_height = 3 #np.random.randint(1,11) 
 emission_rate = 10 #np.random.randint(1,21)                                                                 
 windspeed= 4.7 #np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= np.pi/2 #np.random.randint(0,360)
+wind_direction= np.pi/4 #np.random.randint(0,360)
 
 #INPUT FOR ALGORITHM
 
