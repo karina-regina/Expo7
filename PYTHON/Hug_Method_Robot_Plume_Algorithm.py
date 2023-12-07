@@ -17,13 +17,13 @@ import seaborn as sns
 stability = 1                                                                                      
 #Origin Coordinates Of Plume
 angle= np.random.uniform(0, 2 * np.pi)
-stack_x = 45 #np.random.uniform(0, 51) * np.cos(angle)
-stack_y = -5 #np.random.uniform(0, 51) * np.sin(angle)
-stack_height = 3 #np.random.randint(1,11) 
-emission_rate = 10 #np.random.randint(1,21)                                                                 
-windspeed= 4.7 #np.random.randint(1,26)
+stack_x = np.random.uniform(0, 51) * np.cos(angle)
+stack_y = np.random.uniform(0, 51) * np.sin(angle)
+stack_height = np.random.randint(1,11) 
+emission_rate = np.random.randint(1,21)                                                                 
+windspeed= np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= np.pi/4 #np.random.randint(0,360)
+wind_direction= np.random.uniform(0, 2 * np.pi)
 
 #INPUT FOR ALGORITHM
 
@@ -83,7 +83,7 @@ indix,indiy,indiz=np.where((downwind > 0))
 Concentration= np.zeros(np.shape(downwind))
 Concentration[indix,indiy,indiz] =((emission_rate/(2*math.pi*windspeed*sig_y[indix,indiy,indiz]*sig_z[indix,indiy,indiz]))*(math.e**(-crosswind[indix,indiy,indiz]**2/(2*sig_y[indix,indiy,indiz]**2))* (math.e**(-(Z[indix,indiy,indiz]-stack_height)**2/(2*sig_z[indix,indiy,indiz]**2))+ math.e**(-(Z[indix,indiy,indiz]+stack_height)**2/(2*sig_z[indix,indiy,indiz]**2)))))
 #Prevents Issues Regarding Algorithm And Measurements
-Concentration[Concentration < 3e-4] = 0
+Concentration[Concentration < 3e-5] = 0
 Concentration2D=(Concentration[:,:, 0])
 
 #SETUP FOR INTERACTIVE PLOT

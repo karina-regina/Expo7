@@ -85,7 +85,7 @@ indix,indiy,indiz=np.where((downwind > 0))
 Concentration= np.zeros(np.shape(downwind))
 Concentration[indix,indiy,indiz] =((emission_rate/(2*math.pi*windspeed*sig_y[indix,indiy,indiz]*sig_z[indix,indiy,indiz]))*(math.e**(-crosswind[indix,indiy,indiz]**2/(2*sig_y[indix,indiy,indiz]**2))* (math.e**(-(Z[indix,indiy,indiz]-stack_height)**2/(2*sig_z[indix,indiy,indiz]**2))+ math.e**(-(Z[indix,indiy,indiz]+stack_height)**2/(2*sig_z[indix,indiy,indiz]**2)))))
 #Prevents Issues Regarding Algorithm And Measurements
-Concentration[Concentration < 3e-4] = 0
+Concentration[Concentration < 3e-5] = 0
 Concentration2D=(Concentration[:,:, 0])
 
 #SETUP FOR INTERACTIVE PLOT
