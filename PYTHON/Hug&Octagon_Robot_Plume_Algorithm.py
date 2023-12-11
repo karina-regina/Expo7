@@ -12,7 +12,7 @@ import cmath
 import seaborn as sns
 
 #INPUT FOR GAS PLUME
-
+np.random.seed(32)
 #set from 1-6
 stability = 1                                                                                      
 #Origin Coordinates Of Plume
@@ -155,6 +155,12 @@ while RadiusCheck*Redundancy >= 2:
                 step1ss=-step1ss
                 phase1=False
                 move_direction=[Measurement_Points[np.where(np.array(Concentration_At_Measurement)>0)[0][0]][0]-Measurement_Points[-1][0]+step1ss*np.cos(wind_dir),Measurement_Points[np.where(np.array(Concentration_At_Measurement)>0)[0][0]][1]-Measurement_Points[-1][1]+step1ss*np.sin(wind_dir),positive_condition,negative_condition]
+            elif phase4 == True:
+                step4ss=4
+                if correction == 0:
+                    break
+                move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]           
+                correction=0
             else:
                 phase3=True
                 move_direction=[(zeroCpoint[0][0]-zeroCpoint[-1][0])/2 -10*np.sin(wind_dir),(zeroCpoint[0][1]-zeroCpoint[-1][1])/2 + 10*np.cos(wind_dir),positive_condition,negative_condition]
@@ -174,9 +180,8 @@ while RadiusCheck*Redundancy >= 2:
             step4ss=4
             if correction == 0:
                 break
-            move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]
+            move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]           
             correction=0
-
     #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
     elif Concentration_At_Measurement[-1] >= Concentration_At_Measurement[-(2%len(Concentration_At_Measurement))]:
         negative_condition=[0,0]
