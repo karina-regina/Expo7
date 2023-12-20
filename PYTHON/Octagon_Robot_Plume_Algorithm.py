@@ -103,8 +103,13 @@ if len(Measurement_Points)>1:
      for l in range(len(Measurement_Points)):
           ax.scatter(Measurement_Points[l][0], Measurement_Points[l][1], s=5,alpha=0.5, color='white')
           ax.plot([Measurement_Points[l-1][0],Measurement_Points[l][0]], [Measurement_Points[l-1][1], Measurement_Points[l][1]],alpha=0.5,color='white')
-#Plots Origin Point Of Plume
+#Plots Origin Point Of Plume, And Radius 10 of Origin
 ax.scatter(stack_x,stack_y,s=8,color='white',marker='x',label='Gas Leak Source')
+center_x = stack_x
+center_y = stack_y
+circle_radius = 10
+circle = plt.Circle((center_x, center_y), circle_radius, color='white', fill=True, alpha=0.3)
+ax.add_artist(circle)
 #Setup For Info At Top-Left Of Plot
 annotation = plt.annotate('', xy=(0, 0),fontsize=8, xytext=(-130, 114))
 plt.title('Simulation Of The Route Of Robot')
