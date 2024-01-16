@@ -10,9 +10,10 @@ import statsmodels.api as sm
 import math
 import cmath
 import seaborn as sns
+from sympy import symbols, solve, Eq
+np.random.seed(488)
 
 #INPUT FOR GAS PLUME
-np.random.seed(32)
 #set from 1-6
 stability = 1                                                                                      
 #Origin Coordinates Of Plume
@@ -21,9 +22,9 @@ stack_x = np.random.uniform(0, 51) * np.cos(angle)
 stack_y = np.random.uniform(0, 51) * np.sin(angle)
 stack_height = np.random.randint(1,11) 
 emission_rate = np.random.randint(1,21)                                                                 
-windspeed= np.random.randint(1,26)
+windspeed= 3 #np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= np.random.uniform(0, 2 * np.pi)
+wind_direction= np.pi/3 #np.random.uniform(0, 2*np.pi - 1e-5)
 
 #INPUT FOR ALGORITHM
 
@@ -191,6 +192,7 @@ while RadiusCheck*Redundancy >= 2:
             move_direction=[20*np.sin(wind_dir),-20*np.cos(wind_dir),positive_condition,negative_condition]
             phase3=False
             phase4=True
+            centerlineindex=len(Measurement_Points)
         elif phase4 == True:
             if correction == 20:
                 step4ss=-4
@@ -234,3 +236,4 @@ while RadiusCheck*Redundancy >= 2:
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
+print(Measurement_Points[centerlineindex:],Concentration_At_Measurement[centerlineindex:])
