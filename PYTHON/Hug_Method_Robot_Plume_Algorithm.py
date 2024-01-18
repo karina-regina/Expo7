@@ -32,9 +32,9 @@ Measurement_Points=[[-50,-5]]
 
 #GRID & STEPSIZE CALCULATION 
 
-x_range=np.arange(-100,100,0.5)
-y_range=np.arange(-100,100,0.5)
-z_range=np.arange(0,50,0.5)
+x_range=np.arange(-100,101,0.5)
+y_range=np.arange(-100,101,0.5)
+z_range=np.arange(0,51,0.5)
 #It Turns Each Into 3D-Arrays For Calculations In All 3 Axis
 X,Y,Z = np.meshgrid(x_range,y_range,z_range)
 
@@ -124,7 +124,7 @@ Concentration_At_Measurement = []
 RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y])
 #Adds Concentration To Concentration_At_Measurement For Each Coordinate.]
 for XYCoordinate in Measurement_Points:
-     Concentration_At_Measurement.append(Concentration2D[((round(100+XYCoordinate[1]))*2),((round(100+XYCoordinate[0]))*2)])
+    Concentration_At_Measurement.append(Concentration2D[((round(100+XYCoordinate[1]))*2),((round(100+XYCoordinate[0]))*2)])
 
 #This Is Where Non-Iterative Calculations For The Algorithm Belong 
 step1ss,step2ss=5,5

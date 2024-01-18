@@ -22,7 +22,7 @@ stack_x = np.random.uniform(0, 51) * np.cos(angle)
 stack_y = np.random.uniform(0, 51) * np.sin(angle)
 stack_height = np.random.randint(1,11) 
 emission_rate = np.random.randint(1,21)                                                                 
-windspeed= 3 #np.random.randint(1,26)
+windspeed= np.random.randint(1,26)
 #Wind Angle In Degrees
 wind_direction= np.pi/3 #np.random.uniform(0, 2*np.pi - 1e-5)
 
@@ -33,9 +33,9 @@ Measurement_Points=[[0,0]]
 
 #GRID & STEPSIZE CALCULATION 
 
-x_range=np.arange(-100,100,0.5)
-y_range=np.arange(-100,100,0.5)
-z_range=np.arange(0,50,0.5)
+x_range=np.arange(-100,101,0.5)
+y_range=np.arange(-100,101,0.5)
+z_range=np.arange(0,51,0.5)
 #It Turns Each Into 3D-Arrays For Calculations In All 3 Axis
 X,Y,Z = np.meshgrid(x_range,y_range,z_range)
 
