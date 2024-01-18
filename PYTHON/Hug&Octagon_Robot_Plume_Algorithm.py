@@ -173,6 +173,7 @@ while RadiusCheck*Redundancy >= 2:
             negative_condition=[0,0]
             positive_condition=[0,0]
             move_direction=[x[i],y[i],positive_condition,negative_condition]
+            begin_of_crosswind_index=len(Measurement_Points)
     #In Case Of Concentration Being Lower Than The Concentration At The Previous Measurement Point
     elif Concentration_At_Measurement[-1] < Concentration_At_Measurement[-(2%len(Concentration_At_Measurement))]:
         negative_condition=[0,0]
@@ -237,6 +238,12 @@ while RadiusCheck*Redundancy >= 2:
 
 min_C_ind,max_C_ind=Concentration_At_Measurement.index(min(Concentration_At_Measurement[centerlineindex:])),Concentration_At_Measurement.index(max(Concentration_At_Measurement[centerlineindex:]))
 lowmax_distance=(math.dist(Measurement_Points[min_C_ind],Measurement_Points[max_C_ind]))
+
+Crosswind_list=Measurement_Points[begin_of_crosswind_index:end_of_crosswind_index]
+Crosswind_distance=math.dist(max(Crosswind_list),min(Crosswind_list))
+
+neg_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0])
+pos_slope=(Measurement_Points[max_C_ind+1][1]-Measurement_Points[max_C_ind][1])/(Measurement_Points[max_C_ind+1][0]-Measurement_Points[max_C_ind][0])
 
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
