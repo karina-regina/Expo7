@@ -165,6 +165,7 @@ while RadiusCheck*Redundancy >= 2:
             else:
                 phase3=True
                 move_direction=[(zeroCpoint[0][0]-zeroCpoint[-1][0])/2 -10*np.sin(wind_dir),(zeroCpoint[0][1]-zeroCpoint[-1][1])/2 + 10*np.cos(wind_dir),positive_condition,negative_condition]
+                end_of_crosswind_index=len(Measurement_Points)
         else:   
             #In Case Of Concentration Never Having Been Higher Than 0
             if i >= len(octax)-1:
@@ -233,7 +234,10 @@ while RadiusCheck*Redundancy >= 2:
     Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][1]))*2)-1][((round(100+Measurement_Points[i][0]))*2)-1])  
     plt.draw()
     plt.pause(0.4)
+
+min_C_ind,max_C_ind=Concentration_At_Measurement.index(min(Concentration_At_Measurement[centerlineindex:])),Concentration_At_Measurement.index(max(Concentration_At_Measurement[centerlineindex:]))
+lowmax_distance=(math.dist(Measurement_Points[min_C_ind],Measurement_Points[max_C_ind]))
+
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 plt.ioff()
 plt.show()
-print(Measurement_Points[centerlineindex:],Concentration_At_Measurement[centerlineindex:])
