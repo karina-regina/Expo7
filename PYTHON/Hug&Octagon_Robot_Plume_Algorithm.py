@@ -11,6 +11,7 @@ import math
 import cmath
 import seaborn as sns
 from sympy import symbols, solve, Eq
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 np.random.seed(488)
 
 #INPUT FOR GAS PLUME
@@ -236,6 +237,8 @@ while RadiusCheck*Redundancy >= 2:
     plt.draw()
     plt.pause(0.4)
 
+#CALCULATING X1,X2,X3,X4
+
 min_C_ind,max_C_ind=Concentration_At_Measurement.index(min(Concentration_At_Measurement[centerlineindex:])),Concentration_At_Measurement.index(max(Concentration_At_Measurement[centerlineindex:]))
 lowmax_distance=(math.dist(Measurement_Points[min_C_ind],Measurement_Points[max_C_ind]))
 
@@ -245,6 +248,14 @@ Crosswind_distance=math.dist(max(Crosswind_list),min(Crosswind_list))
 neg_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0])
 pos_slope=(Measurement_Points[max_C_ind+1][1]-Measurement_Points[max_C_ind][1])/(Measurement_Points[max_C_ind+1][0]-Measurement_Points[max_C_ind][0])
 
+#DEFINING LDA MODEL & DEPLOYING IT
+
+LDA_Data=pd.read_excel('LDA_Data.xlsx')
+x_cols = ['Crosswind', 'Distance On Centerline', 'Negative Gradient','Positive Gradient']
+model = LinearDiscriminantAnalysis(solver='lsqr').fit(LDA_Data[x_cols], LDA_Data['Stability Class'])
+stability_class_prediction = model.predict([[Crosswind_distance,lowmax_distance,neg_slope,pos_slope]])
+
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
+print('original',stability,'approximation',stability_class_prediction)
 plt.ioff()
 plt.show()
