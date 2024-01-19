@@ -14,9 +14,9 @@ import openpyxl
 
 #INPUT FOR DATA ANALYSIS
 
-NumberOfTrials=30
+NumberOfTrials=1
 np.random.seed(42)
-
+print(pd.read_excel('LDA_Data.xlsx'))
 
 #SET UP FOR DATA ANALYSIS
 

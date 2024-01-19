@@ -12,20 +12,20 @@ import cmath
 import seaborn as sns
 from sympy import symbols, solve, Eq
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-np.random.seed(488)
+np.random.seed(489)
 
 #INPUT FOR GAS PLUME
 #set from 1-6
-stability = 1                                                                                      
+stability = 4#np.random.randint(1,7)                                                                                      
 #Origin Coordinates Of Plume
-angle= np.random.uniform(0, 2 * np.pi)
-stack_x = np.random.uniform(0, 51) * np.cos(angle)
-stack_y = np.random.uniform(0, 51) * np.sin(angle)
-stack_height = np.random.randint(1,11) 
-emission_rate = np.random.randint(1,21)                                                                 
-windspeed= np.random.randint(1,26)
+angle= np.pi/2 #np.random.uniform(0, 2 * np.pi)
+stack_x = 0 #np.random.uniform(0, 51) * np.cos(angle)
+stack_y = -50 #np.random.uniform(0, 51) * np.sin(angle)
+stack_height = 11 #np.random.randint(1,11) 
+emission_rate = 1 #np.random.randint(1,21)                                                                 
+windspeed= 1 #np.random.randint(1,26)
 #Wind Angle In Degrees
-wind_direction= np.pi/3 #np.random.uniform(0, 2*np.pi - 1e-5)
+wind_direction= np.pi #np.random.uniform(0, 2*np.pi - 1e-5)
 
 #INPUT FOR ALGORITHM
 
@@ -134,6 +134,7 @@ zeroCpoint=[]
 phase1=True
 phase3=False
 phase4=False
+begin_of_crosswind_index=0
 correction=20
 wind_dir=(3*np.pi/2- wind_direction)-np.pi/2
 octax = np.array([0,55.0, 47.631, 27.5, 0.0, -27.5, -47.631, -55.0, -47.631, -27.5, -0.0, 27.5, 47.631, 33.25, 20.731, -7.399, -29.957, -29.957, -7.399, 20.731, 77.75, 72.5, 57.458, 34.656, 7.174, -21.277, -46.855, -66.104, -76.426, -76.426, -66.104, -46.855, -21.277, 7.174, 34.656, 57.458, 72.5, 22.125, 6.837, -17.9, -17.9, 6.837, 88.875, 84.06, 70.135, 48.61, 21.818, -7.339, -35.701, -60.193, -78.163, -87.663, -87.663, -78.163, -60.193, -35.701, -7.339, 21.818, 48.61, 70.135, 84.06, 44.375, 35.9, 13.713, -13.713, -35.9, -44.375, -35.9, -13.713, 13.713, 35.9, 66.625, 60.027, 41.54, 14.825, -14.825, -41.54, -60.027, -66.625, -60.027, -41.54, -14.825, 14.825, 41.54, 60.027, 16.562, 0.0, -16.562, -0.0, 94.438, 89.815, 76.402, 55.509, 29.183, 0.0, -29.183, -55.509, -76.402, -89.815, -94.438, -89.815, -76.402, -55.509, -29.183, -0.0, 29.183, 55.509, 76.402, 89.815, 27.688, 13.844, -13.844, -27.688, -13.844, 13.844, 83.312, 78.288, 63.821, 41.656, 14.467, -14.467, -41.656, -63.821, -78.288, -83.312, -78.288, -63.821, -41.656, -14.467, 14.467, 41.656, 63.821, 78.288, 38.812, 27.445, 0.0, -27.445, -38.812, -27.445, -0.0, 27.445, 72.188, 66.693, 51.044, 27.625, 0.0, -27.625, -51.044, -66.693, -72.188, -66.693, -51.044, -27.625, -0.0, 27.625, 51.044, 66.693, 49.938, 42.01, 20.745, -7.107, -32.702, -47.915, -47.915, -32.702, -7.107, 20.745, 42.01, 61.062, 54.068, 34.687, 7.36, -21.653, -45.706, -59.288, -59.288, -45.706, -21.653, 7.36, 34.687, 54.068])
@@ -144,7 +145,6 @@ y= np.diff(octay)
 
 while RadiusCheck*Redundancy >= 2:   
     RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
-    print(Measurement_Points[-1], '\nc', Concentration_At_Measurement[-1])
     #This Is Where Iterative Calculations For The Algorithm Belong.
 
     if Concentration_At_Measurement[-1] <= 0:
@@ -224,9 +224,7 @@ while RadiusCheck*Redundancy >= 2:
              break
         #Rounds To The Nearest Half. (Due To Resolution Of Gas Plume Being In 0.5 By 0.5 Meters)
         Measurement_Points[-1][j]=(round(Measurement_Points[-1][j]*2)/2)
-    if len(Measurement_Points)>=2:
-        Total_Distance+=math.dist(Measurement_Points[i],Measurement_Points[i-1])
-
+    
     #UPDATES TO PLOT & WHILE-LOOP
 
     update_annotation(f'Current Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), [stack_x, stack_y]),ndigits =2)} Meters\nRobot Has Travelled {round(Total_Distance,ndigits=2)} Meters & Taken {i+1} Amount Of Measurements\nCurrent Concentration At Coordinate Is {round(Concentration_At_Measurement[-1],ndigits=2)}')
@@ -234,6 +232,12 @@ while RadiusCheck*Redundancy >= 2:
     ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.5,color='white')
     i+=1
     Concentration_At_Measurement.append(Concentration2D[((round(100+Measurement_Points[i][1]))*2)-1][((round(100+Measurement_Points[i][0]))*2)-1])  
+    if len(Measurement_Points)>=2:
+        Total_Distance+=math.dist(Measurement_Points[i],Measurement_Points[i-1])
+        if Measurement_Points[-1] == Measurement_Points[-2]:
+            Measurement_Points.pop(-1)
+            Concentration_At_Measurement.pop(-1)
+            break
     plt.draw()
     plt.pause(0.4)
 
@@ -245,15 +249,22 @@ lowmax_distance=(math.dist(Measurement_Points[min_C_ind],Measurement_Points[max_
 Crosswind_list=Measurement_Points[begin_of_crosswind_index:end_of_crosswind_index]
 Crosswind_distance=math.dist(max(Crosswind_list),min(Crosswind_list))
 
-neg_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0])
-pos_slope=(Measurement_Points[max_C_ind+1][1]-Measurement_Points[max_C_ind][1])/(Measurement_Points[max_C_ind+1][0]-Measurement_Points[max_C_ind][0])
+
+if max_C_ind >= len(Measurement_Points)-1:
+    pos_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0]+1e-100)
+    neg_slope=(Measurement_Points[max_C_ind-1][1]-Measurement_Points[max_C_ind-2][1])/(Measurement_Points[max_C_ind-1][0]-Measurement_Points[max_C_ind-2][0]+1e-100)
+else:
+    neg_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0]+1e-100)
+    pos_slope=(Measurement_Points[max_C_ind+1][1]-Measurement_Points[max_C_ind][1])/(Measurement_Points[max_C_ind+1][0]-Measurement_Points[max_C_ind][0]+1e-100)
+
 
 #DEFINING LDA MODEL & DEPLOYING IT
 
 LDA_Data=pd.read_excel('LDA_Data.xlsx')
+
 x_cols = ['Crosswind', 'Distance On Centerline', 'Negative Gradient','Positive Gradient']
 model = LinearDiscriminantAnalysis(solver='lsqr').fit(LDA_Data[x_cols], LDA_Data['Stability Class'])
-stability_class_prediction = model.predict([[Crosswind_distance,lowmax_distance,neg_slope,pos_slope]])
+stability_class_prediction = model.predict(pd.DataFrame([[Crosswind_distance,lowmax_distance,neg_slope,pos_slope]], columns=x_cols))[0]
 
 print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
 print('original',stability,'approximation',stability_class_prediction)
