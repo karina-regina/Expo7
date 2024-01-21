@@ -12,20 +12,21 @@ import cmath
 import seaborn as sns
 from sympy import symbols, solve, Eq
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-np.random.seed(489)
+from scipy.optimize import curve_fit
+np.random.seed(513)
 
 #INPUT FOR GAS PLUME
 #set from 1-6
-stability = 4#np.random.randint(1,7)                                                                                      
+stability = np.random.randint(1,7)                                                                                      
 #Origin Coordinates Of Plume
-angle= np.pi/2 #np.random.uniform(0, 2 * np.pi)
-stack_x = 0 #np.random.uniform(0, 51) * np.cos(angle)
-stack_y = -50 #np.random.uniform(0, 51) * np.sin(angle)
-stack_height = 11 #np.random.randint(1,11) 
-emission_rate = 1 #np.random.randint(1,21)                                                                 
-windspeed= 1 #np.random.randint(1,26)
+angle= np.random.uniform(0, 2 * np.pi)
+stack_x = np.random.uniform(0, 51) * np.cos(angle)
+stack_y = np.random.uniform(0, 51) * np.sin(angle)
+stack_height = np.random.randint(1,11) 
+emission_rate = np.random.randint(1,21)                                                                 
+windspeed= 1 #np.random.randint(1,16)
 #Wind Angle In Degrees
-wind_direction= np.pi #np.random.uniform(0, 2*np.pi - 1e-5)
+wind_direction= np.random.uniform(0, 2*np.pi - 1e-5)
 
 #INPUT FOR ALGORITHM
 
@@ -122,8 +123,7 @@ Error_String='.'
 #Redundancy Is A Method To Break The While-Loop From Inside A For-Loop As An Extra Measure
 Redundancy=1
 Concentration_At_Measurement = []
-#This Is Distance Between Gas Leak And Robot
-RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y])
+
 #Adds Concentration To Concentration_At_Measurement For Each Coordinate.]
 for XYCoordinate in Measurement_Points:
      Concentration_At_Measurement.append(Concentration2D[((round(100+XYCoordinate[1]))*2),((round(100+XYCoordinate[0]))*2)])
@@ -134,8 +134,10 @@ zeroCpoint=[]
 phase1=True
 phase3=False
 phase4=False
+phase5=False
 begin_of_crosswind_index=0
 correction=20
+Meas_Count=0
 wind_dir=(3*np.pi/2- wind_direction)-np.pi/2
 octax = np.array([0,55.0, 47.631, 27.5, 0.0, -27.5, -47.631, -55.0, -47.631, -27.5, -0.0, 27.5, 47.631, 33.25, 20.731, -7.399, -29.957, -29.957, -7.399, 20.731, 77.75, 72.5, 57.458, 34.656, 7.174, -21.277, -46.855, -66.104, -76.426, -76.426, -66.104, -46.855, -21.277, 7.174, 34.656, 57.458, 72.5, 22.125, 6.837, -17.9, -17.9, 6.837, 88.875, 84.06, 70.135, 48.61, 21.818, -7.339, -35.701, -60.193, -78.163, -87.663, -87.663, -78.163, -60.193, -35.701, -7.339, 21.818, 48.61, 70.135, 84.06, 44.375, 35.9, 13.713, -13.713, -35.9, -44.375, -35.9, -13.713, 13.713, 35.9, 66.625, 60.027, 41.54, 14.825, -14.825, -41.54, -60.027, -66.625, -60.027, -41.54, -14.825, 14.825, 41.54, 60.027, 16.562, 0.0, -16.562, -0.0, 94.438, 89.815, 76.402, 55.509, 29.183, 0.0, -29.183, -55.509, -76.402, -89.815, -94.438, -89.815, -76.402, -55.509, -29.183, -0.0, 29.183, 55.509, 76.402, 89.815, 27.688, 13.844, -13.844, -27.688, -13.844, 13.844, 83.312, 78.288, 63.821, 41.656, 14.467, -14.467, -41.656, -63.821, -78.288, -83.312, -78.288, -63.821, -41.656, -14.467, 14.467, 41.656, 63.821, 78.288, 38.812, 27.445, 0.0, -27.445, -38.812, -27.445, -0.0, 27.445, 72.188, 66.693, 51.044, 27.625, 0.0, -27.625, -51.044, -66.693, -72.188, -66.693, -51.044, -27.625, -0.0, 27.625, 51.044, 66.693, 49.938, 42.01, 20.745, -7.107, -32.702, -47.915, -47.915, -32.702, -7.107, 20.745, 42.01, 61.062, 54.068, 34.687, 7.36, -21.653, -45.706, -59.288, -59.288, -45.706, -21.653, 7.36, 34.687, 54.068])
 octay = np.array([0,0.0, 27.5, 47.631, 55.0, 47.631, 27.5, 0.0, -27.5, -47.631, -55.0, -47.631, -27.5, 0.0, 25.996, 32.416, 14.427, -14.427, -32.416, -25.996, 0.0, 28.087, 52.38, 69.599, 77.418, 74.782, 62.046, 40.93, 14.287, -14.287, -40.93, -62.046, -74.782, -77.418, -69.599, -52.38, -28.087, 0.0, 21.042, 13.005, -13.005, -21.042, 0.0, 28.858, 54.588, 74.403, 86.155, 88.571, 81.389, 65.387, 42.3, 14.628, -14.628, -42.3, -65.387, -81.389, -88.571, -86.155, -74.403, -54.588, -28.858, 0.0, 26.083, 42.203, 42.203, 26.083, 0.0, -26.083, -42.203, -42.203, -26.083, 0.0, 28.908, 52.09, 64.955, 64.955, 52.09, 28.908, -0.0, -28.908, -52.09, -64.955, -64.955, -52.09, -28.908, 0.0, 16.562, 0.0, -16.562, 0.0, 29.183, 55.509, 76.402, 89.815, 94.438, 89.815, 76.402, 55.509, 29.183, 0.0, -29.183, -55.509, -76.402, -89.815, -94.438, -89.815, -76.402, -55.509, -29.183, 0.0, 23.978, 23.978, 0.0, -23.978, -23.978, 0.0, 28.495, 53.552, 72.151, 82.047, 82.047, 72.151, 53.552, 28.495, 0.0, -28.495, -53.552, -72.151, -82.047, -82.047, -72.151, -53.552, -28.495, 0.0, 27.445, 38.812, 27.445, 0.0, -27.445, -38.812, -27.445, 0.0, 27.625, 51.044, 66.693, 72.188, 66.693, 51.044, 27.625, 0.0, -27.625, -51.044, -66.693, -72.188, -66.693, -51.044, -27.625, 0.0, 26.998, 45.425, 49.429, 37.74, 14.069, -14.069, -37.74, -49.429, -45.425, -26.998, 0.0, 28.377, 50.253, 60.617, 57.094, 40.492, 14.613, -14.613, -40.492, -57.094, -60.617, -50.253, -28.377])
@@ -143,11 +145,15 @@ x= np.diff(octax)
 y= np.diff(octay)
 
 
-while RadiusCheck*Redundancy >= 2:   
-    RadiusCheck=math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]),[stack_x,stack_y]) 
+while Redundancy == 1:   
     #This Is Where Iterative Calculations For The Algorithm Belong.
 
-    if Concentration_At_Measurement[-1] <= 0:
+    if phase5 == True:
+        move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]           
+        Meas_Count+=1
+        if Meas_Count>=4:
+            break
+    elif Concentration_At_Measurement[-1] <= 0:
         #In Case Of Overshooting
         if sum(Concentration_At_Measurement) > 0:
             negative_condition=[0,0]
@@ -181,9 +187,10 @@ while RadiusCheck*Redundancy >= 2:
         positive_condition=[0,0]
         move_direction=[step1ss*np.cos(wind_dir),step1ss*np.sin(wind_dir),positive_condition,negative_condition]
         if phase4 == True:
-            step4ss=4
             if correction == 0:
-                break
+                phase5=True
+            else:
+                step4ss=4
             move_direction=[-(step4ss+correction)*np.sin(wind_dir),(step4ss+correction)*np.cos(wind_dir),positive_condition,negative_condition]           
             correction=0
     #In Case Of Concentration Being Higher Than The Concentration At The Previous Measurement Point    
@@ -208,20 +215,26 @@ while RadiusCheck*Redundancy >= 2:
     #For-loop Takes Into Account X & Y.
     for j in range(2):
         #If Suggested move_direction Is Infeasible, It Uses positive_condition
+        #For This Algorithm's Purposes, This Isn't Wanted
         if Measurement_Points[-2][j]+move_direction[j]>100:
-             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[2][j])
+            Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[2][j])
+            if phase5 == True:
+                Redundancy=0
         #If Suggested move_direction Is Infeasible, It Uses negative_condition
+        #For This Algorithm's Purposes, This Isn't Wanted
         elif Measurement_Points[-2][j]+move_direction[j]<-100:
-             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[3][j])
+            Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[3][j])
+            if phase5 == True:
+                Redundancy=0
         #Uses Normal move_direction Values     
         else:
-             Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[j])  
+            Measurement_Points[-1].append(Measurement_Points[-2][j]+move_direction[j])  
         #Checks If Newest Measurement Point Is Invalid
         if abs(Measurement_Points[-1][j]) > 100:
-             Redundancy=0
-             Measurement_Points.pop(-1)
-             Error_String=', Simulation Ended Due To An Error In Negative Or Positive Condition Calculation'
-             break
+            Redundancy=0
+            Measurement_Points.pop(-1)
+            Error_String=', Simulation Ended Due To An Error In Negative Or Positive Condition Calculation'
+            break
         #Rounds To The Nearest Half. (Due To Resolution Of Gas Plume Being In 0.5 By 0.5 Meters)
         Measurement_Points[-1][j]=(round(Measurement_Points[-1][j]*2)/2)
     
@@ -240,33 +253,112 @@ while RadiusCheck*Redundancy >= 2:
             break
     plt.draw()
     plt.pause(0.4)
+update_annotation(f'Current Distance Between Last Measurement Point And Objective Is {round(math.dist((Measurement_Points[-1][0], Measurement_Points[-1][1]), [stack_x, stack_y]),ndigits =2)} Meters\nRobot Has Travelled {round(Total_Distance,ndigits=2)} Meters & Taken {i+1} Amount Of Measurements\nCurrent Concentration At Coordinate Is {round(Concentration_At_Measurement[-1],ndigits=2)}')
+ax.scatter(Measurement_Points[i][0], Measurement_Points[i][1], s=10, color='white',alpha=0.5)
+ax.plot([Measurement_Points[i-1][0],Measurement_Points[i][0]], [Measurement_Points[i-1][1], Measurement_Points[i][1]],alpha=0.5,color='white')
+plt.draw()
 
 #CALCULATING X1,X2,X3,X4
 
+Relative_0_Coordinates= Measurement_Points[-1]
+if math.dist(Measurement_Points[centerlineindex+2],[50 * np.cos(wind_dir),50 * np.sin(wind_dir)])<math.dist(Measurement_Points[centerlineindex+1],[50 * np.cos(wind_dir),50 * np.sin(wind_dir)]):
+    Rotation_Constant=-1
+else:
+    Relative_0_Coordinates= Measurement_Points[centerlineindex+1]
+    Rotation_Constant=1
 min_C_ind,max_C_ind=Concentration_At_Measurement.index(min(Concentration_At_Measurement[centerlineindex:])),Concentration_At_Measurement.index(max(Concentration_At_Measurement[centerlineindex:]))
-lowmax_distance=(math.dist(Measurement_Points[min_C_ind],Measurement_Points[max_C_ind]))
-
+#X1
 Crosswind_list=Measurement_Points[begin_of_crosswind_index:end_of_crosswind_index]
 Crosswind_distance=math.dist(max(Crosswind_list),min(Crosswind_list))
+#X2
+lowmax_distance=(math.dist(Measurement_Points[min_C_ind],Measurement_Points[max_C_ind]))
+#Rotating Measurement Points According To If We Moved Towards Origin or Away From It.
+Rotated_MM=(Measurement_Points[centerlineindex+1:])[::Rotation_Constant]
+x_manh_dist,y_manh_dist = np.array(Rotated_MM)[:,0],np.array(Rotated_MM)[:,1]
+CvsX_X_Axis = [sum(np.sqrt(np.diff(x_manh_dist)**2 + np.diff(y_manh_dist)**2)[:i]) for i in range(len(np.sqrt(np.diff(x_manh_dist)**2 + np.diff(y_manh_dist)**2)) + 1)]
+CvsX_C_Axis = (Concentration_At_Measurement[centerlineindex+1:])[::Rotation_Constant]
+max_C_ind=CvsX_C_Axis.index(max(CvsX_C_Axis))
 
-
-if max_C_ind >= len(Measurement_Points)-1:
-    pos_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0]+1e-100)
-    neg_slope=(Measurement_Points[max_C_ind-1][1]-Measurement_Points[max_C_ind-2][1])/(Measurement_Points[max_C_ind-1][0]-Measurement_Points[max_C_ind-2][0]+1e-100)
+x_cols = ['Crosswind', 'Distance On Centerline', 'Negative Gradient','Positive Gradient']
+#Handling Exceptions For When Negative Or Positive Slope Aren't Available Due To Area Bounds
+if max_C_ind == 0:
+    neg_slope=(CvsX_C_Axis[max_C_ind+1]-CvsX_C_Axis[max_C_ind])/(CvsX_X_Axis[max_C_ind+1]-CvsX_X_Axis[max_C_ind]+1e-100)
+    x_cols.pop(-1)
+    X_vars=[[Crosswind_distance,lowmax_distance,neg_slope]]
+elif max_C_ind == len(CvsX_C_Axis)-1:
+    pos_slope=(CvsX_C_Axis[max_C_ind]-CvsX_C_Axis[max_C_ind-1])/(CvsX_X_Axis[max_C_ind]-CvsX_X_Axis[max_C_ind-1]+1e-100)
+    x_cols.pop(-2)
+    X_vars=[[Crosswind_distance,lowmax_distance,pos_slope]]
 else:
-    neg_slope=(Measurement_Points[max_C_ind][1]-Measurement_Points[max_C_ind-1][1])/(Measurement_Points[max_C_ind][0]-Measurement_Points[max_C_ind-1][0]+1e-100)
-    pos_slope=(Measurement_Points[max_C_ind+1][1]-Measurement_Points[max_C_ind][1])/(Measurement_Points[max_C_ind+1][0]-Measurement_Points[max_C_ind][0]+1e-100)
-
+    neg_slope=(CvsX_C_Axis[max_C_ind+1]-CvsX_C_Axis[max_C_ind])/(CvsX_X_Axis[max_C_ind+1]-CvsX_X_Axis[max_C_ind]+1e-100)
+    pos_slope=(CvsX_C_Axis[max_C_ind]-CvsX_C_Axis[max_C_ind-1])/(CvsX_X_Axis[max_C_ind]-CvsX_X_Axis[max_C_ind-1]+1e-100)
+    X_vars=[[Crosswind_distance,lowmax_distance,neg_slope,pos_slope]]
 
 #DEFINING LDA MODEL & DEPLOYING IT
 
-LDA_Data=pd.read_excel('LDA_Data.xlsx')
-
-x_cols = ['Crosswind', 'Distance On Centerline', 'Negative Gradient','Positive Gradient']
+LDA_Data=pd.read_excel('6000_LDA_Data.xlsx')
 model = LinearDiscriminantAnalysis(solver='lsqr').fit(LDA_Data[x_cols], LDA_Data['Stability Class'])
-stability_class_prediction = model.predict(pd.DataFrame([[Crosswind_distance,lowmax_distance,neg_slope,pos_slope]], columns=x_cols))[0]
+stability_class_prediction = model.predict(pd.DataFrame(X_vars, columns=x_cols))[0]
 
-print(f'Robot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i} Number Of Measurement Points, Until It Got To {[round(Measurement_Points[-1][0],ndigits=2),round(Measurement_Points[-1][1],ndigits=2)]} With A Concentration Of {round(Concentration_At_Measurement[-1],ndigits=5)}. The Objective Coordinates Were {[stack_x, stack_y]}{Error_String}')
-print('original',stability,'approximation',stability_class_prediction)
+#DEFINING CENTERLINE GAUSSIAN PLUME FORMULA
+
+stability_values= {1 : (122.8,0.94470,24.1670,2.5334),
+                2: (90.673, 0.93198, 18.3330, 1.8096),
+                3: (61.141, 0.91465, 12.5, 1.0857),
+                4: (34.459, 0.86974, 8.3330, 0.72382),
+                5: (24.26, 0.83660, 6.25, 0.54287),
+                6: (15.209, 0.81558, 4.1667, 0.36191)
+                }
+P_a,P_b,P_c,P_d=(stability_values[stability_class_prediction][0]),(stability_values[stability_class_prediction][1]),(stability_values[stability_class_prediction][2]),(stability_values[stability_class_prediction][3])
+
+def cGP(x_or, Qu, x_leak, h):
+    y_or = 0
+    y_leak = 0
+    z_or = 0
+    
+    x = x_or - x_leak
+    y = y_or - y_leak
+
+    a = P_a
+    b = P_b
+    c = P_c
+    d = P_d
+
+    theta = np.radians(c - d * np.log(x / 1000))
+    sy = 465.11628 * (x / 1000) * np.tan(theta)
+    sz = np.minimum(a * (x / 1000) ** b, 5000)
+
+    c = (Qu / (2 * np.pi * sy * sz)) * (
+            np.exp(- (z_or - h) ** 2 / (2 * sz ** 2)) +
+            np.exp(- (z_or + h) ** 2 / (2 * sz ** 2))
+    ) * np.exp(-y ** 2 / (2 * sy ** 2))
+
+    return c
+#Fixing Bounds For Solution Space
+
+beta0 = [3.0, -20, 0.5]
+lowerbound=-abs(math.dist([50 * np.cos(wind_dir),50 * np.sin(wind_dir)],Relative_0_Coordinates))
+bounds=([1,lowerbound,1],[20,0,11])
+
+#Getting Origin Prediction And Plotting
+beta_fit, covmatrix = curve_fit(cGP, CvsX_X_Axis, CvsX_C_Axis, method='trf',bounds=bounds,maxfev=100000)
+origin_prediction=[-(beta_fit[1])*np.sin(wind_dir)+Relative_0_Coordinates[0],(beta_fit[1])*np.cos(wind_dir)+Relative_0_Coordinates[1]]
+ax.scatter(origin_prediction[0],origin_prediction[1], s=40, color='red',alpha=0.5,label='Prediction')
+plt.legend()
+plt.draw()
+
+print(f'\nRobot Travelled {round(Total_Distance,ndigits=2)} Meters And Took {i+1} Number Of Measurement Points.\nThe Algorithm Predicts The Origin {round(origin_prediction[0],2),round(origin_prediction[1],2),round(beta_fit[2],2)}. The True Origin Coordinates Were {[round(stack_x,2), round(stack_y,2),round(stack_height,2)]}.\nIt Predicted A Stability Class {stability_class_prediction}, The True Stability Was {stability}.\nIt Predicted An Emission Rate {round(beta_fit[0],2)}, With The True Emission Rate Being {round(emission_rate,2)}{Error_String}')
 plt.ioff()
+plt.show()
+
+#PLOTTING CONCENTRATION VS. CENTERLINE
+
+plt.title('Concentration Along Centerline')
+plt.xlabel('Centerline Axis')
+plt.ylabel('Concentration')
+plt.scatter(CvsX_X_Axis,CvsX_C_Axis,color='red',label='Measurements')
+plt.scatter(beta_fit[1],0,label='Origin',color='green')
+XPLOT=np.linspace(-10,100,100)
+plt.plot(XPLOT,cGP(XPLOT,*beta_fit),label='Fitted Parameters')
+plt.legend()
 plt.show()
